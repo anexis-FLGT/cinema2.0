@@ -1,0 +1,178 @@
+/* ============================================
+   Система переключения тем
+   ============================================ */
+
+/* Темная тема (по умолчанию) */
+:root {
+    /* Основные цвета */
+    --bg-primary: #0d0d0d;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #111;
+    --bg-card: #1a1a1a;
+    --bg-header: #000;
+    --bg-footer: #000;
+    
+    /* Цвета текста */
+    --text-primary: #e5e5e5;
+    --text-secondary: #aaa;
+    --text-tertiary: #ccc;
+    --text-meta: #aaa;
+    
+    /* Акцентные цвета */
+    --accent-primary: #e50914;
+    --accent-hover: #f40612;
+    
+    /* Границы */
+    --border-color: #333;
+    --border-secondary: #2f2f2f;
+    
+    /* Тени */
+    --shadow-sm: rgba(0, 0, 0, 0.3);
+    --shadow-md: rgba(0, 0, 0, 0.5);
+    --shadow-lg: rgba(0, 0, 0, 0.6);
+    
+    /* Overlay */
+    --overlay-dark: rgba(0, 0, 0, 0.9);
+    --overlay-medium: rgba(0, 0, 0, 0.4);
+    --overlay-light: rgba(0, 0, 0, 0.2);
+    
+    /* Формы */
+    --input-bg: #2f2f2f;
+    --input-border: #404040;
+    --input-focus-border: #e50914;
+}
+
+/* Светлая тема */
+[data-theme="light"] {
+    /* Основные цвета */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --bg-card: #ffffff;
+    --bg-header: #ffffff;
+    --bg-footer: #f8f9fa;
+    
+    /* Цвета текста */
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-tertiary: #495057;
+    --text-meta: #6c757d;
+    
+    /* Акцентные цвета */
+    --accent-primary: #e50914;
+    --accent-hover: #f40612;
+    
+    /* Границы */
+    --border-color: #dee2e6;
+    --border-secondary: #ced4da;
+    
+    /* Тени */
+    --shadow-sm: rgba(0, 0, 0, 0.1);
+    --shadow-md: rgba(0, 0, 0, 0.15);
+    --shadow-lg: rgba(0, 0, 0, 0.2);
+    
+    /* Overlay */
+    --overlay-dark: rgba(0, 0, 0, 0.7);
+    --overlay-medium: rgba(0, 0, 0, 0.3);
+    --overlay-light: rgba(0, 0, 0, 0.1);
+    
+    /* Формы */
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --input-focus-border: #e50914;
+}
+
+/* Переключатель темы */
+.theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.theme-toggle i {
+    font-size: 16px;
+}
+
+/* Плавный переход при смене темы */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Стили для Bootstrap компонентов */
+.btn-outline-light {
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline-light:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.btn-danger {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.btn-danger:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+.card {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.text-white {
+    color: var(--text-primary) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.bg-black {
+    background-color: var(--bg-primary) !important;
+}
+
+.border-secondary {
+    border-color: var(--border-color) !important;
+}
+
+.bg-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-dark {
+    background-color: var(--bg-card) !important;
+}
+
+.text-light {
+    color: var(--text-primary) !important;
+}
+
+.text-white {
+    color: var(--text-primary) !important;
+}
+
+.text-white-50 {
+    color: var(--text-secondary) !important;
+}
+

@@ -1,0 +1,130 @@
+body {
+    background: radial-gradient(circle at 20% 30%, var(--bg-primary), var(--bg-tertiary));
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Фон с "плавающими" бликами */
+body::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(220,38,38,0.3), transparent 70%);
+    top: -150px;
+    right: -150px;
+    filter: blur(100px);
+    animation: floatGlow 10s ease-in-out infinite alternate;
+}
+
+@keyframes floatGlow {
+    from { transform: translateY(0px); }
+    to { transform: translateY(40px); }
+}
+
+/* Центрирование карточки */
+.register-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+/* Основная карточка регистрации */
+.register-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    padding: 35px 30px;
+    box-shadow: 0 8px 25px var(--shadow-md);
+}
+
+[data-theme="light"] .register-card {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* Поля формы */
+.form-control {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 10px 12px;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.form-control:focus {
+    background: var(--input-bg);
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 0.25rem rgba(229, 9, 20, 0.25);
+    color: var(--text-primary);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Кнопка */
+.btn-danger {
+    background-color: var(--accent-primary);
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    transition: background 0.3s;
+}
+
+.btn-danger:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Иконки глазика */
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 38px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.password-toggle:hover {
+    color: var(--text-primary);
+}
+
+/* Подсказка и ошибки */
+.form-text {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.invalid-feedback {
+    display: none;
+    color: #ff4d4d;
+    font-size: 0.9rem;
+}
+
+.alert-danger {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff4d4d;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+
+a.text-light {
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a.text-light:hover {
+    color: #ef4444;
+}

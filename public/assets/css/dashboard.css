@@ -1,0 +1,74 @@
+/* Netflix-like стили для личного кабинета - без анимаций */
+
+body {
+    background-color: var(--bg-primary);
+}
+
+.user-dashboard {
+    background: var(--bg-primary);
+    min-height: 100vh;
+}
+
+/* Убираем все анимации и переходы */
+* {
+    transition: none !important;
+    animation: none !important;
+}
+
+.card {
+    color: var(--text-primary);
+    border-radius: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+}
+
+.btn-danger {
+    background-color: var(--accent-primary);
+    border: none;
+    transition: none !important;
+}
+
+.btn-danger:hover {
+    background-color: var(--accent-hover);
+    transition: none !important;
+}
+
+.form-control {
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: none !important;
+}
+
+.form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
+    background-color: var(--input-bg);
+    border-color: var(--input-focus-border);
+    transition: none !important;
+}
+
+/* Убираем анимации модальных окон */
+.modal {
+    transition: none !important;
+}
+
+.modal.fade .modal-dialog {
+    transition: none !important;
+    transform: none !important;
+}
+
+.modal.show .modal-dialog {
+    transform: none !important;
+}
+
+/* Убираем анимации алертов */
+.alert {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Убираем hover эффекты с анимациями */
+.btn:hover {
+    transition: none !important;
+}

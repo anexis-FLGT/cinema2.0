@@ -1,0 +1,54 @@
+body {
+    background: var(--bg-primary);
+}
+
+header { 
+    background-color: var(--bg-header); 
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+}
+
+header a.nav-link {
+    color: var(--text-primary); 
+    transition: color 0.3s ease; 
+}
+
+header a.nav-link:hover { 
+    color: var(--accent-primary); 
+}
+
+.nav-container { 
+    background-color: var(--bg-card); 
+    border-radius: 30px; 
+    padding: 3px 50px; 
+}
+
+.nav-link { 
+    font-weight: 500; 
+    color: var(--text-primary) !important; 
+}
+
+.nav-link:hover { 
+    color: var(--text-secondary) !important; 
+}
+
+.action-buttons { 
+    margin-left: auto; 
+}
+
+.cart-button { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    width: 40px; 
+    height: 40px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 50%; 
+    color: var(--text-primary); 
+    background-color: transparent; 
+}
+
+.cart-button:hover {
+    background-color: var(--bg-secondary); 
+    color: var(--text-primary); 
+}

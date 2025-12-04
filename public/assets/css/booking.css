@@ -1,0 +1,121 @@
+.session-btn {
+    min-width: 100px;
+    transition: all 0.3s;
+}
+
+.session-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+}
+
+.session-btn.active {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.hall-container {
+    margin-bottom: 2rem;
+}
+
+.hall-name {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.screen {
+    background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-tertiary));
+    height: 40px;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-weight: bold;
+    box-shadow: 0 4px 6px var(--shadow-sm);
+}
+
+.seats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.seat-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.row-number {
+    min-width: 30px;
+    text-align: center;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.seat {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #6c757d;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: all 0.2s;
+    background-color: #28a745;
+    color: white;
+}
+
+.seat:hover:not(.seat-booked):not(.seat-selected) {
+    transform: scale(1.1);
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.seat-available {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.seat-selected {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.seat-booked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seat-legend {
+    width: 30px;
+    height: 30px;
+    border: 2px solid;
+    border-radius: 5px;
+}
+
+.seat-legend.seat-available {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.seat-legend.seat-selected {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.seat-legend.seat-booked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}

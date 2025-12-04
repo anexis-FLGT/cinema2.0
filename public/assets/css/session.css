@@ -1,0 +1,28 @@
+    .session-time-btn {
+        min-width: 100px;
+        transition: all 0.3s ease;
+    }
+
+    .session-time-btn:hover {
+        background-color: var(--accent-primary);
+        border-color: var(--accent-primary);
+        color: var(--text-primary);
+    }
+
+    .card {
+        transition: transform 0.3s ease;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px var(--shadow-md);
+    }
+
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1rem;
+        }
+    }
