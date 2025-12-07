@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="{{ asset('assets/css/booking.css') }}">
 
 <div class="container my-5" style="color: var(--text-primary);">
-    {{-- Информация о фильме --}}
+    {{-- Информация о фильме и сеансе --}}
     <div class="row mb-5">
         <div class="col-md-4">
             <img src="{{ $movie->poster }}" alt="{{ $movie->movie_title }}" class="img-fluid rounded shadow-lg">
@@ -20,7 +20,19 @@
             
             <p class="mb-2"><strong>Возрастное ограничение:</strong> {{ $movie->age_limit }}</p>
             <p class="mb-2"><strong>Длительность:</strong> {{ $movie->duration }}</p>
-            <p class="mb-2"><strong>Продюсер:</strong> {{ $movie->producer }}</p>
+            
+            {{-- Информация о сеансе --}}
+            <div class="mt-4 p-3 rounded" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                <h5 class="mb-3" style="color: var(--text-primary);">Информация о сеансе</h5>
+                <p class="mb-2">
+                    <strong><i class="bi bi-calendar-event me-2"></i>Дата и время:</strong> 
+                    {{ \Carbon\Carbon::parse($session->date_time_session)->locale('ru')->isoFormat('D MMMM YYYY, dddd, HH:mm') }}
+                </p>
+                <p class="mb-0">
+                    <strong><i class="bi bi-door-open me-2"></i>Зал:</strong> 
+                    {{ $hall->hall_name }} ({{ $hall->type_hall }})
+                </p>
+            </div>
         </div>
     </div>
 
@@ -32,43 +44,50 @@
         </div>
     @endif
 
-    {{-- Выбор сеанса --}}
-    <div class="card mb-4" style="background-color: var(--bg-card); border-color: var(--border-color) !important;">
-        <div class="card-header" style="background-color: var(--bg-secondary);">
-            <h3 class="mb-0" style="color: var(--text-primary);">Выберите сеанс</h3>
-        </div>
-        <div class="card-body">
-            @if($sessions->count() > 0)
-                <div class="row g-3">
-                    @foreach($sessionsByDate as $date => $dateSessions)
-                        <div class="col-12">
-                            <h5 class="mb-3" style="color: var(--text-primary);">{{ \Carbon\Carbon::parse($date)->locale('ru')->isoFormat('D MMMM YYYY, dddd') }}</h5>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach($dateSessions as $session)
-                                    <button type="button" 
-                                            class="btn btn-outline-light session-btn" 
-                                            data-session-id="{{ $session->id_session }}"
-                                            data-session-time="{{ $session->date_time_session->format('H:i') }}">
-                                        {{ $session->date_time_session->format('H:i') }}
-                                    </button>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <p style="color: var(--text-secondary);">На данный момент нет доступных сеансов для этого фильма.</p>
-            @endif
-        </div>
-    </div>
-
     {{-- Выбор зала и места --}}
-    <div id="hall-seats-section" class="card" style="display: none; background-color: var(--bg-card); border-color: var(--border-color) !important;">
+    <div class="card mb-4" style="background-color: var(--bg-card); border-color: var(--border-color) !important;">
         <div class="card-header" style="background-color: var(--bg-secondary);">
             <h3 class="mb-0" style="color: var(--text-primary);">Выберите место</h3>
         </div>
         <div class="card-body">
-            <div id="halls-container"></div>
+            <div id="halls-container">
+                {{-- Схема зала --}}
+                <div class="hall-container">
+                    <h4 class="hall-name mb-4">{{ $hall->hall_name }} ({{ $hall->type_hall }})</h4>
+                    
+                    <div class="screen">ЭКРАН</div>
+                    <div class="seats-grid">
+                        @php
+                            // Группируем места по рядам
+                            $seatsByRow = $hall->seats->groupBy('row_number');
+                            // Сортируем ряды
+                            $sortedRows = $seatsByRow->keys()->sort(function($a, $b) {
+                                return (int)$a - (int)$b;
+                            });
+                        @endphp
+                        
+                        @foreach($sortedRows as $rowNum)
+                            @php
+                                $rowSeats = $seatsByRow[$rowNum]->sortBy('seat_number');
+                            @endphp
+                            <div class="seat-row">
+                                <div class="row-number">{{ $rowNum }}</div>
+                                @foreach($rowSeats as $seat)
+                                    @php
+                                        $isBooked = $seat->is_booked ?? false;
+                                    @endphp
+                                    <div class="seat {{ $isBooked ? 'seat-booked' : 'seat-available' }}" 
+                                         data-seat-id="{{ $seat->id_seat }}" 
+                                         data-hall-id="{{ $hall->id_hall }}"
+                                         @if(!$isBooked) onclick="selectSeat(this)" @endif>
+                                        {{ $seat->seat_number }}
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
             
             {{-- Счетчик выбранных мест --}}
             <div id="selected-seats-info" class="mt-4 mb-3" style="display: none;">
@@ -89,7 +108,7 @@
             {{-- Форма оплаты --}}
             <form id="booking-form" method="POST" action="{{ route('booking.store') }}" style="display: none;">
                 @csrf
-                <input type="hidden" name="session_id" id="selected_session_id">
+                <input type="hidden" name="session_id" value="{{ $session->id_session }}">
                 <div id="seat-ids-container"></div>
                 
                 <div class="mt-4">
@@ -120,126 +139,10 @@
     </div>
 </div>
 
-<style>
-   
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let selectedSessionId = null;
     let selectedSeatIds = []; // Массив выбранных мест
     const MAX_SEATS = 7;
-    
-    // Обработка выбора сеанса
-    document.querySelectorAll('.session-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Убираем активный класс со всех кнопок
-            document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
-            // Добавляем активный класс к выбранной кнопке
-            this.classList.add('active');
-            
-            selectedSessionId = this.dataset.sessionId;
-            loadHallSeats(selectedSessionId);
-        });
-    });
-    
-    // Загрузка зала и мест
-    function loadHallSeats(sessionId) {
-        // Скрываем форму бронирования и сбрасываем выбор
-        document.getElementById('booking-form').style.display = 'none';
-        document.getElementById('selected-seats-info').style.display = 'none';
-        selectedSeatIds = [];
-        document.getElementById('halls-container').innerHTML = '<div class="text-center"><div class="spinner-border text-light" role="status"><span class="visually-hidden">Загрузка...</span></div></div>';
-        
-        fetch('{{ route("booking.getHallSeats") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                session_id: sessionId
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Ошибка сервера');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                document.getElementById('halls-container').innerHTML = '<p class="text-danger">' + data.error + '</p>';
-                return;
-            }
-            displayHall(data.hall);
-            document.getElementById('hall-seats-section').style.display = 'block';
-            document.getElementById('selected_session_id').value = sessionId;
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-            document.getElementById('halls-container').innerHTML = '<p class="text-danger">Произошла ошибка при загрузке мест. Пожалуйста, попробуйте еще раз.</p>';
-        });
-    }
-    
-    // Отображение зала и мест
-    function displayHall(hall) {
-        const container = document.getElementById('halls-container');
-        container.innerHTML = '';
-        
-        if (!hall || !hall.seats || hall.seats.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-secondary);">Нет доступных мест</p>';
-            return;
-        }
-        
-        const hallDiv = document.createElement('div');
-        hallDiv.className = 'hall-container';
-        
-        // Группируем места по рядам
-        const seatsByRow = {};
-        hall.seats.forEach(seat => {
-            if (!seatsByRow[seat.row_number]) {
-                seatsByRow[seat.row_number] = [];
-            }
-            seatsByRow[seat.row_number].push(seat);
-        });
-        
-        // Сортируем ряды
-        const sortedRows = Object.keys(seatsByRow).sort((a, b) => parseInt(a) - parseInt(b));
-        
-        let seatsHTML = '<div class="screen">ЭКРАН</div>';
-        seatsHTML += '<div class="seats-grid">';
-        
-        sortedRows.forEach(rowNum => {
-            const seats = seatsByRow[rowNum].sort((a, b) => parseInt(a.seat_number) - parseInt(b.seat_number));
-            
-            seatsHTML += '<div class="seat-row">';
-            seatsHTML += `<div class="row-number">${rowNum}</div>`;
-            
-            seats.forEach(seat => {
-                const isBooked = seat.is_booked || seat.status === 'Забронировано';
-                const seatClass = isBooked ? 'seat-booked' : 'seat-available';
-                
-                seatsHTML += `<div class="seat ${seatClass}" 
-                                  data-seat-id="${seat.id_seat}" 
-                                  data-hall-id="${hall.id_hall}"
-                                  ${isBooked ? '' : 'onclick="selectSeat(this)"'}>
-                                  ${seat.seat_number}
-                              </div>`;
-            });
-            
-            seatsHTML += '</div>';
-        });
-        
-        seatsHTML += '</div>';
-        
-        hallDiv.innerHTML = `
-            <h4 class="hall-name">${hall.hall_name} (${hall.type_hall})</h4>
-            ${seatsHTML}
-        `;
-        
-        container.appendChild(hallDiv);
-    }
     
     // Выбор места (множественный выбор до 7 мест)
     window.selectSeat = function(seatElement) {
@@ -280,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = document.getElementById('submit-btn');
         
         // Стоимость за место (из конфига или по умолчанию 500)
-        const pricePerSeat = 500;
+        const pricePerSeat = {{ config('yookassa.ticket_price', 500) }};
         const totalPrice = count * pricePerSeat;
         
         // Очищаем контейнер
@@ -333,4 +236,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-

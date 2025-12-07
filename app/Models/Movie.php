@@ -15,8 +15,10 @@ class Movie extends Model
         'poster',
         'baner',
         'duration',
+        'release_year',
         'age_limit',
         'description',
+        'director',
         'producer',
     ];
 
@@ -32,6 +34,13 @@ class Movie extends Model
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class, 'movie_id', 'id_movie');
+        return $this->hasManyThrough(
+            Booking::class,
+            Session::class,
+            'movie_id',   // Foreign key on sessions table
+            'session_id', // Foreign key on bookings table
+            'id_movie',   // Local key on movies table
+            'id_session'  // Local key on sessions table
+        );
     }
 }

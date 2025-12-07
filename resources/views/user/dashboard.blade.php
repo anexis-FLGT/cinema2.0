@@ -3,253 +3,7 @@
 @section('title', 'Личный кабинет')
 
 @section('content')
-<style>
-    /* Netflix-like стили для личного кабинета */
-    .user-dashboard {
-        background: var(--bg-primary);
-        min-height: 100vh;
-        padding: 2rem 0;
-    }
-    
-    .dashboard-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-secondary);
-        border-radius: 4px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .dashboard-title {
-        color: var(--accent-primary);
-        font-weight: 700;
-        font-size: 2rem;
-        margin-bottom: 1.5rem;
-        letter-spacing: -0.5px;
-    }
-    
-    .profile-section h5 {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
-    }
-    
-    .profile-section p {
-        color: var(--text-primary);
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
-        font-weight: 400;
-    }
-    
-    .btn-netflix {
-        background: var(--accent-primary);
-        color: var(--text-primary);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        border-radius: 4px;
-        transition: none;
-    }
-    
-    .btn-netflix:hover {
-        background: var(--accent-hover);
-        color: var(--text-primary);
-    }
-    
-    .btn-netflix-outline {
-        background: transparent;
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        border-radius: 4px;
-        transition: none;
-    }
-    
-    .btn-netflix-outline:hover {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-    }
-    
-    .btn-netflix-danger {
-        background: transparent;
-        color: var(--accent-primary);
-        border: 1px solid var(--accent-primary);
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        transition: none;
-    }
-    
-    .btn-netflix-danger:hover {
-        background: var(--accent-primary);
-        color: var(--text-primary);
-    }
-    
-    .btn-netflix-primary {
-        background: var(--accent-primary);
-        color: var(--text-primary);
-        border: 1px solid var(--accent-primary);
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        transition: none;
-        display: inline-flex;
-        align-items: center;
-    }
-    
-    .btn-netflix-primary:hover {
-        background: var(--accent-hover);
-        border-color: var(--accent-hover);
-        color: var(--text-primary);
-    }
-    
-    .bookings-title {
-        color: var(--text-primary);
-        font-weight: 700;
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-        letter-spacing: -0.5px;
-    }
-    
-    .booking-card {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-secondary);
-        border-radius: 4px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .booking-card h5 {
-        color: var(--text-primary);
-        font-weight: 600;
-        font-size: 1.125rem;
-        margin-bottom: 1rem;
-    }
-    
-    .booking-info {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .booking-info strong {
-        color: var(--text-primary);
-        font-weight: 600;
-    }
-    
-    .booking-value {
-        color: var(--text-primary);
-        font-size: 0.9375rem;
-        margin-bottom: 0.75rem;
-    }
-    
-    .badge-netflix {
-        padding: 0.375rem 0.75rem;
-        border-radius: 4px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .badge-success {
-        background: #46d369;
-        color: #000;
-    }
-    
-    .badge-warning {
-        background: #ffa00a;
-        color: #000;
-    }
-    
-    .badge-info {
-        background: #0071eb;
-        color: #fff;
-    }
-    
-    .alert-netflix {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-secondary);
-        border-radius: 4px;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        color: var(--text-primary);
-    }
-    
-    .alert-success {
-        border-left: 4px solid #46d369;
-    }
-    
-    .alert-danger {
-        border-left: 4px solid var(--accent-primary);
-    }
-    
-    .alert-info {
-        border-left: 4px solid #0071eb;
-    }
-    
-    .modal-netflix .modal-content {
-        background: var(--bg-card);
-        border: 1px solid var(--border-secondary);
-        border-radius: 4px;
-    }
-    
-    .modal-netflix .modal-header {
-        border-bottom: 1px solid var(--border-secondary);
-        padding: 1.5rem;
-    }
-    
-    .modal-netflix .modal-title {
-        color: var(--accent-primary);
-        font-weight: 700;
-    }
-    
-    .modal-netflix .modal-body {
-        padding: 1.5rem;
-    }
-    
-    .modal-netflix .form-label {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-    
-    .modal-netflix .form-control {
-        background: var(--input-bg);
-        border: 1px solid var(--input-border);
-        color: var(--text-primary);
-        border-radius: 4px;
-        padding: 0.75rem;
-    }
-    
-    .modal-netflix .form-control:focus {
-        background: var(--input-bg);
-        border-color: var(--input-focus-border);
-        color: var(--text-primary);
-        box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
-    }
-    
-    .modal-netflix .modal-footer {
-        border-top: 1px solid var(--border-secondary);
-        padding: 1.5rem;
-    }
-    
-    .text-muted-netflix {
-        color: var(--text-secondary);
-    }
-    
-    .delete-account-section {
-        border-top: 1px solid var(--border-secondary);
-        padding-top: 2rem;
-        margin-top: 2rem;
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}">
 
 <div class="user-dashboard">
     <div class="container">
@@ -273,121 +27,127 @@
                 </div>
             @endif
 
-            <div class="profile-section row">
-                <div class="col-md-6">
+            <div class="profile-section row g-4">
+                <div class="col-md-4 col-sm-6">
                     <h5>Фамилия</h5>
-                    <p>{{ $user->last_name }}</p>
+                    <p class="mb-0">{{ $user->last_name }}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4 col-sm-6">
                     <h5>Имя</h5>
-                    <p>{{ $user->first_name }}</p>
+                    <p class="mb-0">{{ $user->first_name }}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4 col-sm-6">
                     <h5>Отчество</h5>
-                    <p>{{ $user->middle_name ?? '-' }}</p>
+                    <p class="mb-0">{{ $user->middle_name ?? '-' }}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4 col-sm-6">
                     <h5>Телефон</h5>
-                    <p>{{ $user->phone ?? '-' }}</p>
+                    <p class="mb-0">{{ $user->phone ?? '-' }}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4 col-sm-6">
                     <h5>Логин</h5>
-                    <p>{{ $user->login }}</p>
-                </div>
-                <div class="col-md-6">
-                    <h5>Роль</h5>
-                    <p>{{ $user->role_id == 1 ? 'Администратор' : 'Пользователь' }}</p>
+                    <p class="mb-0">{{ $user->login }}</p>
                 </div>
             </div>
 
-            {{-- Секция с бронированиями --}}
+            {{-- Секция с активными бронированиями --}}
             <div class="mt-5">
-                <h3 class="bookings-title">
-                    <i class="bi bi-ticket-perforated me-2"></i>Мои бронирования
-                </h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="bookings-title mb-0">
+                        <i class="bi bi-ticket-perforated me-2"></i>Активные бронирования
+                    </h3>
+                    <a href="{{ route('user.history') }}" class="btn-netflix-outline">
+                        <i class="bi bi-clock-history me-2"></i>История бронирований
+                    </a>
+                </div>
 
-                @if($bookings->isEmpty())
+                @if($activeBookings->isEmpty())
                     <div class="alert-netflix alert-info">
                         <i class="bi bi-info-circle me-2"></i>У вас пока нет активных бронирований.
                     </div>
                 @else
-                    <div class="row g-3">
-                        @foreach($bookings as $booking)
-                            <div class="col-md-6">
-                                <div class="booking-card">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div style="flex: 1;">
-                                            <h5>{{ $booking->movie->movie_title ?? 'Фильм не найден' }}</h5>
-                                            <div class="booking-info">
-                                                <i class="bi bi-calendar-event me-1"></i>
-                                                {{ \Carbon\Carbon::parse($booking->show_date)->locale('ru')->isoFormat('D MMMM YYYY') }}
+                    @foreach($activeBookingsGrouped as $sessionDateTime => $bookingsGroup)
+                        <div class="mb-3">
+                            <h4 class="text-muted-netflix mb-2" style="font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="bi bi-calendar-event me-2"></i>
+                                Сеанс: {{ \Carbon\Carbon::parse($sessionDateTime)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}
+                            </h4>
+                            <div class="row g-2">
+                                @foreach($bookingsGroup as $booking)
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="booking-card">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div style="flex: 1;">
+                                                    <h5>{{ $booking->session->movie->movie_title ?? 'Фильм не найден' }}</h5>
+                                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                                        <div class="booking-info">
+                                                            <i class="bi bi-calendar-event me-1"></i>
+                                                            {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY') }}
+                                                        </div>
+                                                        <div class="booking-info">
+                                                            <i class="bi bi-clock me-1"></i>
+                                                            {{ \Carbon\Carbon::parse($booking->session->date_time_session)->format('H:i') }}
+                                                        </div>
+                                                        <div class="booking-info">
+                                                            <i class="bi bi-door-open me-1"></i>
+                                                            {{ $booking->hall->hall_name ?? 'Не указан' }}
+                                                        </div>
+                                                        <div class="booking-info">
+                                                            <i class="bi bi-seat me-1"></i>
+                                                            Ряд {{ $booking->seat->row_number ?? '?' }}, Место {{ $booking->seat->seat_number ?? '?' }}
+                                                        </div>
+                                                        @if($booking->payment && $booking->payment->amount)
+                                                            <div class="booking-info">
+                                                                <i class="bi bi-currency-ruble me-1"></i>
+                                                                <strong>{{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽</strong>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-2">
+                                                    @if($booking->payment)
+                                                        @if($booking->payment->payment_status === 'оплачено')
+                                                            <span class="badge-netflix badge-success">Оплачено</span>
+                                                        @elseif($booking->payment->payment_status === 'ожидание')
+                                                            <span class="badge-netflix badge-warning">Ожидание</span>
+                                                        @elseif($booking->payment->payment_status === 'ожидает_подтверждения')
+                                                            <span class="badge-netflix badge-info">Ожидает</span>
+                                                        @endif
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <div class="booking-info">
-                                                <i class="bi bi-clock me-1"></i>
-                                                {{ \Carbon\Carbon::parse($booking->show_time)->format('H:i') }}
+
+                                            <div class="d-flex justify-content-end align-items-center pt-2" style="border-top: 1px solid var(--border-secondary);">
+                                                <div class="d-flex gap-2">
+                                                    @if($booking->payment && $booking->payment->payment_status === 'ожидание')
+                                                        <a href="{{ route('payment.retry', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;">
+                                                            <i class="bi bi-credit-card me-1"></i>Оплатить
+                                                        </a>
+                                                    @endif
+                                                    @if($booking->payment && ($booking->payment->payment_status === 'оплачено' || $booking->payment->payment_status === 'ожидание' || $booking->payment->payment_status === 'ожидает_подтверждения'))
+                                                        <form action="{{ route('user.booking.cancel', $booking->id_booking) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            <button type="submit" class="btn-netflix-danger" 
+                                                                    onclick="return confirm('Вы уверены, что хотите отменить бронирование? Место будет освобождено.')">
+                                                                <i class="bi bi-x-circle me-1"></i>Отменить
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="text-end ms-3">
-                                            @if($booking->payment)
-                                                @if($booking->payment->payment_status === 'оплачено')
-                                                    <span class="badge-netflix badge-success">Оплачено</span>
-                                                @elseif($booking->payment->payment_status === 'ожидание')
-                                                    <span class="badge-netflix badge-warning">Ожидание оплаты</span>
-                                                @elseif($booking->payment->payment_status === 'ожидает_подтверждения')
-                                                    <span class="badge-netflix badge-info">Ожидает подтверждения</span>
-                                                @endif
-                                            @endif
                                         </div>
                                     </div>
-
-                                    <div class="row mb-3">
-                                        <div class="col-6">
-                                            <div class="booking-info">Зал:</div>
-                                            <div class="booking-value">{{ $booking->hall->hall_name ?? 'Не указан' }}</div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="booking-info">Место:</div>
-                                            <div class="booking-value">
-                                                Ряд {{ $booking->seat->row_number ?? '?' }}, 
-                                                Место {{ $booking->seat->seat_number ?? '?' }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    @if($booking->payment && $booking->payment->amount)
-                                        <div class="mb-3">
-                                            <div class="booking-info">Стоимость:</div>
-                                            <div class="booking-value" style="font-size: 1.125rem; font-weight: 600;">
-                                                {{ number_format($booking->payment->amount, 2, ',', ' ') }} ₽
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                        <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid var(--border-secondary);">
-                                        <div class="text-muted-netflix" style="font-size: 0.75rem;">
-                                            Номер бронирования: #{{ $booking->id_booking }}
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            @if($booking->payment && $booking->payment->payment_status === 'ожидание')
-                                                <a href="{{ route('payment.retry', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;">
-                                                    <i class="bi bi-credit-card me-1"></i>Оплатить
-                                                </a>
-                                            @endif
-                                            @if($booking->payment && ($booking->payment->payment_status === 'оплачено' || $booking->payment->payment_status === 'ожидание' || $booking->payment->payment_status === 'ожидает_подтверждения'))
-                                                <form action="{{ route('user.booking.cancel', $booking->id_booking) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn-netflix-danger" 
-                                                            onclick="return confirm('Вы уверены, что хотите отменить бронирование? Место будет освобождено.')">
-                                                        <i class="bi bi-x-circle me-1"></i>Отменить
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
+                                @endforeach
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
+                    
+                    {{-- Пагинация для активных бронирований --}}
+                    @if($activeBookings->hasPages())
+                        <div class="mt-4">
+                            {{ $activeBookings->appends(request()->except('active_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 @endif
             </div>
 
@@ -429,25 +189,39 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Телефон</label>
-                            <input type="text" name="phone" class="form-control" value="{{ $user->phone }}">
+                            <input type="text" name="phone" id="phone" class="form-control" value="{{ $user->phone }}" placeholder="+7 (___) ___-__-__">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Логин</label>
                             <input type="text" name="login" class="form-control" value="{{ $user->login }}" required>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Новый пароль</label>
-                            <div class="position-relative">
-                                <input type="password" name="password" class="form-control" id="passwordField">
-                                <i class="bi bi-eye password-toggle" onclick="togglePassword('passwordField', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #b3b3b3;"></i>
+                        <div class="col-12">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="changePasswordCheckbox">
+                                <label class="form-check-label" for="changePasswordCheckbox">
+                                    Сменить пароль
+                                </label>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Подтверждение пароля</label>
-                            <div class="position-relative">
-                                <input type="password" name="password_confirmation" class="form-control" id="passwordConfirmationField">
-                                <i class="bi bi-eye password-toggle" onclick="togglePassword('passwordConfirmationField', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #b3b3b3;"></i>
+
+                        <div id="passwordFields" style="display: none;" class="col-12">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Новый пароль</label>
+                                    <div class="position-relative">
+                                        <input type="password" name="password" class="form-control" id="passwordField">
+                                        <i class="bi bi-eye password-toggle" onclick="togglePassword('passwordField', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #b3b3b3;"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Подтверждение пароля</label>
+                                    <div class="position-relative">
+                                        <input type="password" name="password_confirmation" class="form-control" id="passwordConfirmationField">
+                                        <i class="bi bi-eye password-toggle" onclick="togglePassword('passwordConfirmationField', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #b3b3b3;"></i>
+                                        <div class="invalid-feedback" id="passwordMismatch" style="display: none;">Пароли не совпадают.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -474,22 +248,155 @@ function togglePassword(id, el) {
     }
 }
 
+// === Маска телефона ===
+const phoneInput = document.getElementById('phone');
+if (phoneInput) {
+    phoneInput.addEventListener('input', function(e) {
+        let value = phoneInput.value.replace(/\D/g, '');
+        if (!value.startsWith('7') && value.length > 0) {
+            value = '7' + value;
+        }
+        let formatted = '+7 (';
+        if (value.length > 1) formatted += value.substring(1, 4);
+        if (value.length >= 5) formatted += ') ' + value.substring(4, 7);
+        if (value.length >= 8) formatted += '-' + value.substring(7, 9);
+        if (value.length >= 10) formatted += '-' + value.substring(9, 11);
+        phoneInput.value = formatted;
+    });
+}
+
 document.getElementById('deleteForm').addEventListener('submit', function (e) {
     if (!confirm('Вы уверены, что хотите удалить аккаунт?')) {
         e.preventDefault();
     }
 });
 
-const profileForm = document.getElementById('profileForm');
-if (profileForm) {
-    profileForm.addEventListener('submit', function(e) {
-        const password = document.getElementById('passwordField');
-        const confirm = document.getElementById('passwordConfirmationField');
-        if (password && confirm && password.value !== confirm.value) {
-            e.preventDefault();
-            alert('Пароли не совпадают!');
+// Переключение видимости полей пароля
+const changePasswordCheckbox = document.getElementById('changePasswordCheckbox');
+const passwordFields = document.getElementById('passwordFields');
+const password = document.getElementById('passwordField');
+const passwordConfirmation = document.getElementById('passwordConfirmationField');
+
+// Сброс чекбокса при открытии модального окна
+const editProfileModal = document.getElementById('editProfileModal');
+if (editProfileModal) {
+    editProfileModal.addEventListener('show.bs.modal', function() {
+        if (changePasswordCheckbox) {
+            changePasswordCheckbox.checked = false;
+        }
+        if (passwordFields) {
+            passwordFields.style.display = 'none';
+        }
+        if (password) {
+            password.value = '';
+            password.classList.remove('is-invalid');
+        }
+        if (passwordConfirmation) {
+            passwordConfirmation.value = '';
+            passwordConfirmation.classList.remove('is-invalid');
+        }
+        const passwordMismatch = document.getElementById('passwordMismatch');
+        if (passwordMismatch) passwordMismatch.style.display = 'none';
+    });
+}
+
+if (changePasswordCheckbox && passwordFields) {
+    changePasswordCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            passwordFields.style.display = 'block';
+            // Очищаем поля при показе
+            if (password) password.value = '';
+            if (passwordConfirmation) passwordConfirmation.value = '';
+        } else {
+            passwordFields.style.display = 'none';
+            // Очищаем поля и ошибки при скрытии
+            if (password) {
+                password.value = '';
+                password.classList.remove('is-invalid');
+            }
+            if (passwordConfirmation) {
+                passwordConfirmation.value = '';
+                passwordConfirmation.classList.remove('is-invalid');
+            }
+            const passwordMismatch = document.getElementById('passwordMismatch');
+            if (passwordMismatch) passwordMismatch.style.display = 'none';
         }
     });
 }
+
+const profileForm = document.getElementById('profileForm');
+if (profileForm) {
+    const passwordMismatch = document.getElementById('passwordMismatch');
+
+    if (password && passwordConfirmation && passwordMismatch) {
+        // Функция проверки паролей
+        function checkPasswords() {
+            // Проверяем только если поля видны (чекбокс отмечен)
+            if (changePasswordCheckbox && changePasswordCheckbox.checked) {
+                if (password.value && passwordConfirmation.value) {
+                    if (password.value !== passwordConfirmation.value) {
+                        passwordMismatch.style.display = 'block';
+                        passwordConfirmation.classList.add('is-invalid');
+                    } else {
+                        passwordMismatch.style.display = 'none';
+                        passwordConfirmation.classList.remove('is-invalid');
+                    }
+                } else {
+                    passwordMismatch.style.display = 'none';
+                    passwordConfirmation.classList.remove('is-invalid');
+                }
+            }
+        }
+
+        // Проверка при вводе
+        password.addEventListener('input', checkPasswords);
+        passwordConfirmation.addEventListener('input', checkPasswords);
+
+        // Проверка при отправке формы
+        profileForm.addEventListener('submit', function(e) {
+            // Проверяем пароли только если чекбокс отмечен
+            if (changePasswordCheckbox && changePasswordCheckbox.checked) {
+                if (password.value && passwordConfirmation.value && password.value !== passwordConfirmation.value) {
+                    e.preventDefault();
+                    passwordMismatch.style.display = 'block';
+                    passwordConfirmation.classList.add('is-invalid');
+                    passwordConfirmation.focus();
+                } else if (password.value && !passwordConfirmation.value) {
+                    e.preventDefault();
+                    alert('Пожалуйста, подтвердите пароль');
+                    passwordConfirmation.focus();
+                } else if (!password.value && passwordConfirmation.value) {
+                    e.preventDefault();
+                    alert('Пожалуйста, введите новый пароль');
+                    password.focus();
+                }
+            }
+        });
+    }
+}
 </script>
+
+<style>
+    .invalid-feedback {
+        display: none;
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+
+    /* Стили для плейсхолдера номера телефона */
+    #phone::placeholder {
+        color: #ffffff !important; /* Белый для темной темы */
+        opacity: 0.7;
+    }
+
+    [data-theme="light"] #phone::placeholder {
+        color: #000000 !important; /* Черный для светлой темы */
+        opacity: 0.6;
+    }
+</style>
 @endsection

@@ -8,6 +8,7 @@ use App\Http\Controllers\HallController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\MovieController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\GenreController;
 use App\Http\Controllers\User\UserController as UserUserController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
@@ -66,7 +67,7 @@ Route::get('/sessions', [\App\Http\Controllers\SessionController::class, 'index'
 | Бронирование билетов
 |-------------------------------------------------------------------------- 
 */
-Route::get('/booking/{movieId}', [BookingController::class, 'show'])->name('booking.show');
+Route::get('/booking/session/{sessionId}', [BookingController::class, 'show'])->name('booking.show');
 Route::post('/booking/get-hall-seats', [BookingController::class, 'getHallSeats'])->name('booking.getHallSeats');
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/booking/success/{bookingId}', [BookingController::class, 'success'])->name('booking.success');
@@ -112,6 +113,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:1'])->group(fu
 
     // AJAX подгрузка пользователей
     Route::get('/users/list', [AdminController::class, 'usersList'])->name('users.list');
+
+    // Раздел жанров (CRUD)
+    Route::get('/genres', [GenreController::class, 'index'])->name('genres.index');
+    Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
+    Route::put('/genres/{id}', [GenreController::class, 'update'])->name('genres.update');
+    Route::delete('/genres/{id}', [GenreController::class, 'destroy'])->name('genres.destroy');
 });
 
 /*
@@ -123,10 +130,13 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:2'])->group(func
     // Главная страница личного кабинета
     Route::get('/dashboard', [UserUserController::class, 'index'])->name('dashboard');
 
+    // История бронирований
+    Route::get('/history', [UserUserController::class, 'history'])->name('history');
+
     // Обновление профиля и смена пароля
     Route::post('/update', [UserUserController::class, 'updateProfile'])->name('updateProfile');
 
-    // Удаление аккаунта (с подтверждением)
+    // Удаление аккаунта
     Route::delete('/delete', [UserUserController::class, 'deleteAccount'])->name('deleteAccount');
 
     // Отмена бронирования

@@ -15,21 +15,67 @@ class UserController extends Controller
     /**
      * Отображение личного кабинета пользователя
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user(); // Получаем текущего пользователя
+        $now = \Carbon\Carbon::now();
         
-        // Получаем все бронирования пользователя с связанными данными
-        $bookings = Booking::with(['movie', 'session', 'hall', 'seat', 'payment'])
-            ->where('user_id', $user->id_user)
+        // Получаем активные бронирования (будущие сеансы)
+        $activeBookingsQuery = Booking::with(['session.movie', 'session.hall', 'session', 'seat', 'payment'])
+            ->join('cinema_sessions', 'bookings.session_id', '=', 'cinema_sessions.id_session')
+            ->where('bookings.user_id', $user->id_user)
             ->whereHas('payment', function($query) {
                 $query->where('payment_status', '!=', 'отменено');
             })
-            ->orderBy('show_date', 'desc')
-            ->orderBy('show_time', 'desc')
-            ->get();
+            ->where('cinema_sessions.date_time_session', '>', $now)
+            ->orderBy('cinema_sessions.date_time_session', 'desc')
+            ->select('bookings.*');
         
-        return view('user.dashboard', compact('user', 'bookings'));
+        // Пагинация для активных бронирований
+        $activeBookings = $activeBookingsQuery->paginate(6, ['*'], 'active_page');
+        
+        // Группировка активных бронирований по дате и времени сеанса
+        $activeBookingsGrouped = $activeBookings->getCollection()->groupBy(function($booking) {
+            if ($booking->session && $booking->session->date_time_session) {
+                return \Carbon\Carbon::parse($booking->session->date_time_session)->format('Y-m-d H:i');
+            }
+            return 'unknown';
+        })->sortKeysDesc();
+        
+        return view('user.dashboard', compact('user', 'activeBookings', 'activeBookingsGrouped'));
+    }
+
+    /**
+     * Отображение истории бронирований
+     */
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+        $now = \Carbon\Carbon::now();
+        
+        // Получаем историю бронирований (прошедшие сеансы)
+        $historyBookingsQuery = Booking::with(['session.movie', 'session.hall', 'session', 'seat', 'payment'])
+            ->join('cinema_sessions', 'bookings.session_id', '=', 'cinema_sessions.id_session')
+            ->where('bookings.user_id', $user->id_user)
+            ->whereHas('payment', function($query) {
+                $query->where('payment_status', '!=', 'отменено');
+            })
+            ->where('cinema_sessions.date_time_session', '<=', $now)
+            ->orderBy('cinema_sessions.date_time_session', 'desc')
+            ->select('bookings.*');
+        
+        // Пагинация для истории
+        $historyBookings = $historyBookingsQuery->paginate(10);
+        
+        // Группировка истории по дате и времени сеанса
+        $historyBookingsGrouped = $historyBookings->getCollection()->groupBy(function($booking) {
+            if ($booking->session && $booking->session->date_time_session) {
+                return \Carbon\Carbon::parse($booking->session->date_time_session)->format('Y-m-d H:i');
+            }
+            return 'unknown';
+        })->sortKeysDesc();
+        
+        return view('user.history', compact('user', 'historyBookings', 'historyBookingsGrouped'));
     }
 
     /**
@@ -111,14 +157,8 @@ class UserController extends Controller
         $payment->payment_status = 'отменено';
         $payment->save();
         
-        // Обновляем статус места на "свободно"
-        if ($booking->seat) {
-            $seat = Seat::find($booking->seat_id);
-            if ($seat) {
-                $seat->status = 'Свободно';
-                $seat->save();
-            }
-        }
+        // НЕ меняем статус места - забронированность определяется только по bookings для конкретного session_id
+        // Место может быть забронировано на другие сеансы, поэтому не нужно менять его статус
         
         return redirect()->route('user.dashboard')
             ->with('success', 'Бронирование успешно отменено. Место освобождено.');

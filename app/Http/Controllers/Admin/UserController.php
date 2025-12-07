@@ -14,7 +14,8 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('role')->get();
-        $roles = Role::all(); // для модальных окон
+        // Исключаем роль "Гость" из списка для редактирования
+        $roles = Role::where('role_name', '!=', 'Гость')->get();
 
         return view('admin.users', compact('users', 'roles'));
     }

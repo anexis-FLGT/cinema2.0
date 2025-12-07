@@ -17,7 +17,7 @@
                     </div>
                     <i class="bi bi-film stat-icon"></i>
                 </div>
-                <p class="mb-0 text-muted mt-2">Управление фильмами</p>
+                <p class="mb-0 text-muted mt-2">Всего фильмов</p>
             </div>
         </div>
 
@@ -30,7 +30,7 @@
                     </div>
                     <i class="bi bi-clock-history stat-icon"></i>
                 </div>
-                <p class="mb-0 text-muted mt-2">Добавление / редактирование сеансов</p>
+                <p class="mb-0 text-muted mt-2">Всего сеансов</p>
             </div>
         </div>
 
@@ -43,7 +43,7 @@
                     </div>
                     <i class="bi bi-people stat-icon"></i>
                 </div>
-                <p class="mb-0 text-muted mt-2">Управление доступом</p>
+                <p class="mb-0 text-muted mt-2">Всего пользователей</p>
             </div>
         </div>
 
@@ -56,34 +56,14 @@
                     </div>
                     <i class="bi bi-ticket-perforated stat-icon"></i>
                 </div>
-                <p class="mb-0 text-muted mt-2">Билеты / брони</p>
+                <p class="mb-0 text-muted mt-2">Всего бронирований</p>
             </div>
         </div>
     </div>
 
 
 
-    {{-- Быстрые действия --}}
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card p-3">
-                <h6>Быстрые действия</h6>
-                <div class="d-flex flex-column gap-2 mt-3">
-                    <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-primary">
-                        Управление фильмами
-                    </a>
-                    <a href="{{ route('admin.sessions.index') }}" class="btn btn-outline-primary">
-                        Управление сеансами
-                    </a>
-                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-primary">
-                        Управление пользователями
-                    </a>
-                    <a href="{{ url('/') }}" class="btn btn-outline-success">
-                        На сайт
-                    </a>
-                </div>
-            </div>
-        </div>
+
 
 
 </div>

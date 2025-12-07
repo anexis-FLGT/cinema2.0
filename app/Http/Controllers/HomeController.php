@@ -62,14 +62,8 @@ class HomeController extends Controller
         }
 
         // Сортировка (применяем к коллекции)
-        $sortBy = $request->input('sort', 'alphabet'); // По умолчанию по алфавиту
+        $sortBy = $request->input('sort', 'newest'); // По умолчанию сначала новые
         switch ($sortBy) {
-            case 'alphabet':
-                $movies = $movies->sortBy('movie_title')->values();
-                break;
-            case 'alphabet_desc':
-                $movies = $movies->sortByDesc('movie_title')->values();
-                break;
             case 'newest':
                 $movies = $movies->sortByDesc('id_movie')->values();
                 break;
@@ -77,7 +71,7 @@ class HomeController extends Controller
                 $movies = $movies->sortBy('id_movie')->values();
                 break;
             default:
-                $movies = $movies->sortBy('movie_title')->values();
+                $movies = $movies->sortByDesc('id_movie')->values();
         }
 
         // Обрабатываем пути к постерам и баннерам
@@ -86,11 +80,33 @@ class HomeController extends Controller
             $movie->baner  = $this->fixPath($movie->baner, 'images/banners/placeholder.jpg');
         }
 
-        // Баннеры — первые 3 фильма
+        // Получаем все жанры для фильтра
+        $genres = Genre::orderBy('genre_name', 'asc')->get();
+
+        // Проверяем, применены ли фильтры
+        $hasFilters = $request->filled('search') || $request->filled('genre') || 
+                      $request->filled('duration_min') || $request->filled('duration_max') || 
+                      $request->filled('show_date');
+
+        // Если фильмов нет и применены фильтры — показываем уведомление
+        if ($movies->isEmpty() && $hasFilters) {
+            // Создаем пустую коллекцию для баннеров
+            $banners = collect();
+            for ($i = 0; $i < 3; $i++) {
+                $banners->push((object)[
+                    'movie_title' => 'Заглушка',
+                    'baner' => asset('images/banners/placeholder.jpg')
+                ]);
+            }
+            
+            return view('index', compact('movies', 'banners', 'genres'))->with('no_results', true);
+        }
+
+        // Баннеры — первые 3 фильма (только если есть фильмы)
         $banners = $movies->take(3);
 
         // Если баннеров меньше 3 — добавляем заглушки
-        if ($banners->count() < 3) {
+        if ($banners->count() < 3 && $banners->count() > 0) {
             $needed = 3 - $banners->count();
             for ($i = 0; $i < $needed; $i++) {
                 $banners->push((object)[
@@ -100,25 +116,10 @@ class HomeController extends Controller
             }
         }
 
-        // Если фильмов нет — создаём заглушки
-        if ($movies->isEmpty()) {
-            $movies = collect();
-            for ($i = 1; $i <= 8; $i++) {
-                $movies->push((object)[
-                    'id_movie' => $i,
-                    'movie_title' => 'Заглушка',
-                    'poster' => asset('images/posters/placeholder.jpg'),
-                    'baner' => asset('images/banners/placeholder.jpg'),
-                    'age_limit' => '0+',
-                    'duration' => '0 мин',
-                    'producer' => 'Неизвестен',
-                    'genre' => 'Жанр не указан',
-                ]);
-            }
+        // Получаем все жанры для фильтра (если еще не получены)
+        if (!isset($genres)) {
+            $genres = Genre::orderBy('genre_name', 'asc')->get();
         }
-
-        // Получаем все жанры для фильтра
-        $genres = Genre::orderBy('genre_name', 'asc')->get();
 
         return view('index', compact('movies', 'banners', 'genres'));
     }

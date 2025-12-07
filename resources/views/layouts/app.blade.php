@@ -24,6 +24,7 @@
     {{-- Основные стили --}}
     <link rel="stylesheet" href="{{ asset('assets/css/theme.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/index.css') }}">
 </head>
 
 
@@ -109,5 +110,22 @@
     
     {{-- Theme Toggle JS --}}
     <script src="{{ asset('assets/js/theme.js') }}"></script>
+
+    {{-- Стили для дропдаун меню в хедере --}}
+    <style>
+        .dropdown-menu .dropdown-item:hover,
+        .dropdown-menu .dropdown-item:focus,
+        .dropdown-menu .dropdown-item:active {
+            background-color: var(--bg-tertiary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .dropdown-menu .dropdown-item.text-danger:hover,
+        .dropdown-menu .dropdown-item.text-danger:focus,
+        .dropdown-menu .dropdown-item.text-danger:active {
+            background-color: var(--bg-tertiary) !important;
+            color: #dc3545 !important;
+        }
+    </style>
 </body>
 </html>

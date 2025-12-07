@@ -54,9 +54,8 @@
                                     </h6>
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach($dateSessions as $session)
-                                            <a href="{{ route('booking.show', $movie->id_movie) }}" 
+                                            <a href="{{ route('booking.show', $session->id_session) }}" 
                                                class="btn btn-outline-light session-time-btn"
-                                               data-session-id="{{ $session->id_session }}"
                                                title="Зал: {{ $session->hall->hall_name ?? 'Не указан' }}">
                                                 <i class="bi bi-clock me-1"></i>
                                                 {{ $session->date_time_session->format('H:i') }}
@@ -70,11 +69,8 @@
                             @endforeach
 
                             <div class="mt-3">
-                                <a href="{{ route('movie.show', $movie->id_movie) }}" class="btn btn-outline-light me-2">
+                                <a href="{{ route('movie.show', $movie->id_movie) }}" class="btn btn-outline-light">
                                     <i class="bi bi-info-circle me-1"></i>Подробнее о фильме
-                                </a>
-                                <a href="{{ route('booking.show', $movie->id_movie) }}" class="btn btn-danger">
-                                    <i class="bi bi-ticket-perforated me-1"></i>Забронировать билет
                                 </a>
                             </div>
                         </div>

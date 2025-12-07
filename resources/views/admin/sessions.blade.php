@@ -21,7 +21,7 @@
         </div>
     @endif
 
-    <div class="card shadow-sm border-0 p-4 bg-light rounded-4">
+    <div class="card shadow-sm border-0 p-4 rounded-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold text-success"><i class="bi bi-clock-history me-2"></i> Управление сеансами</h4>
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSessionModal">

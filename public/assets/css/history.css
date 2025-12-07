@@ -1,0 +1,140 @@
+/* Netflix-like стили для истории бронирований */
+.user-dashboard {
+    background: var(--bg-primary);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.dashboard-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: 4px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+.bookings-title {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+.booking-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-secondary);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.9;
+}
+
+.booking-card h5 {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.booking-info {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.booking-value {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.badge-netflix {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background: #46d369;
+    color: #000;
+}
+
+.alert-netflix {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-secondary);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.alert-info {
+    border-left: 4px solid #0071eb;
+}
+
+.text-muted-netflix {
+    color: var(--text-secondary);
+}
+
+.btn-netflix-outline {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-netflix-outline:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Стили для пагинации */
+.pagination {
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination .page-link {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-secondary);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--bg-card);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-secondary);
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+

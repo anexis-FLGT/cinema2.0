@@ -1,50 +1,585 @@
 /* Базовый layout */
-.admin-wrapper { min-height: 100vh; }
+.admin-wrapper { 
+    min-height: 100vh; 
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
 .admin-sidebar {
     width: 240px;
     min-height: 100vh;
-    background: linear-gradient(180deg,#ffffff,#f3f4f6);
-    border-right: 1px solid #e6e6e6;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
     padding-top: 20px;
     display: flex;
     flex-direction: column;
 }
-.admin-main { background:#fafafa; min-height:100vh; }
+
+.admin-main { 
+    background: var(--bg-primary); 
+    min-height: 100vh; 
+    color: var(--text-primary);
+}
 
 /* Sidebar */
+.admin-sidebar {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
 .admin-sidebar .nav-link {
-    color: #111827;
+    color: var(--text-primary) !important;
     padding: 12px 16px;
     border-radius: 8px;
     margin: 4px 8px;
+    transition: all 0.3s ease;
 }
-.admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
-    background: #f87171;
-    color: #fff;
+
+.admin-sidebar .nav-link:hover {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
 }
-.sidebar-header img { display:block; }
+
+.admin-sidebar .nav-link.active {
+    background: var(--accent-primary) !important;
+    color: #fff !important;
+}
+
+.admin-sidebar .nav-link.disabled {
+    color: var(--text-secondary) !important;
+    opacity: 0.6;
+}
+
+.sidebar-header img { 
+    display: block; 
+}
+
+.sidebar-footer {
+    color: var(--text-secondary);
+}
 
 /* Topbar */
-.admin-topbar { background: #fff; border-bottom: 1px solid #e6e6e6; }
+.admin-topbar { 
+    background: var(--bg-card); 
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.admin-topbar h5 {
+    color: var(--text-primary);
+}
 
 /* Stat cards */
 .stat-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 4px 12px rgba(16,24,40,0.04);
+    box-shadow: 0 4px 12px var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
-.stat-icon { font-size: 28px; color: #ef4444; }
+
+.stat-icon { 
+    font-size: 28px; 
+    color: var(--accent-primary); 
+}
 
 /* Cards */
-.card { border-radius: 12px; }
+.card { 
+    border-radius: 12px;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Tables */
+.table {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-card) !important;
+}
+
+.table thead {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table thead th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.table thead tr {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table tbody {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table tbody tr {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.table tbody tr td {
+    background: inherit !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.table tbody tr:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.table tbody tr:hover td {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table td, .table th {
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    background-color: inherit !important;
+}
+
+.table-info {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info thead {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info thead th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info thead tr {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info tbody {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info tbody tr {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info tbody tr td {
+    background: inherit !important;
+    color: var(--text-primary) !important;
+}
+
+.table-info tbody tr:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.table-info tbody tr:hover td {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary thead {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary thead th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary thead tr {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary tbody {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary tbody tr {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary tbody tr td {
+    background: inherit !important;
+    color: var(--text-primary) !important;
+}
+
+.table-primary tbody tr:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.table-primary tbody tr:hover td {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success thead {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success thead th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success thead tr {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success tbody {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success tbody tr {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success tbody tr td {
+    background: inherit !important;
+    color: var(--text-primary) !important;
+}
+
+.table-success tbody tr:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.table-success tbody tr:hover td {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark thead {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark thead th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark thead tr {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark tbody {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark tbody tr {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark tbody tr td {
+    background: inherit !important;
+    color: var(--text-primary) !important;
+}
+
+.table-dark tbody tr:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.table-dark tbody tr:hover td {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) td {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+    background-color: var(--bg-card) !important;
+}
+
+.table-striped tbody tr:nth-of-type(even) td {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Forms */
+.form-control, .form-select {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+    background: var(--input-bg);
+    border-color: var(--input-focus-border);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
+}
+
+.form-label {
+    color: var(--text-primary);
+}
+
+/* Checkboxes */
+.form-check-input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.form-check-input:not(:checked) {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+.form-check-input:checked {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
+}
+
+.form-check-input:focus:not(:checked) {
+    border-color: var(--input-border);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+}
+
+.form-check-label {
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+    pointer-events: auto;
+}
+
+.genres-checkbox-container {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.genres-checkbox-container .form-check,
+.genres-checkbox-container .genre-item {
+    padding: 8px;
+    margin: 0 -8px;
+    position: relative;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.genres-checkbox-container .form-check:hover,
+.genres-checkbox-container .genre-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.genres-checkbox-container .form-check-input {
+    position: relative;
+    z-index: 2;
+    margin-right: 8px;
+}
+
+.genres-checkbox-container .form-check-input:not(:checked) {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+}
+
+.genres-checkbox-container .form-check-input:checked {
+    background-color: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+}
+
+.genres-checkbox-container .form-check-label {
+    position: relative;
+    z-index: 1;
+    margin-left: 0;
+}
+
+/* Buttons */
+.btn-light {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-light:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline-secondary {
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline-danger {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.btn-outline-danger:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+}
+
+.btn-outline-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modals */
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.modal-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-title {
+    color: var(--text-primary);
+}
+
+/* Alerts */
+.alert {
+    border: 1px solid var(--border-color);
+}
+
+.alert-success {
+    background: rgba(25, 135, 84, 0.1);
+    border-color: rgba(25, 135, 84, 0.3);
+    color: var(--text-primary);
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: var(--text-primary);
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.dropdown-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
 
 /* Movie thumb */
-.movie-thumb img { width:100%; height:120px; object-fit:cover; border-radius:8px; }
+.movie-thumb img { 
+    width: 100%; 
+    height: 120px; 
+    object-fit: cover; 
+    border-radius: 8px; 
+}
+
+/* Text colors */
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+.text-primary {
+    color: var(--text-primary) !important;
+}
+
+/* Table empty states */
+.table tbody tr td.text-center.text-muted {
+    color: var(--text-secondary) !important;
+    background: var(--bg-card) !important;
+}
+
+/* Table align-middle */
+.table.align-middle td,
+.table.align-middle th {
+    vertical-align: middle;
+    color: var(--text-primary) !important;
+}
+
+/* Table responsive wrapper */
+.table-responsive {
+    background: transparent !important;
+}
 
 /* Responsive */
 @media (max-width: 768px) {
-    .admin-sidebar { position: absolute; transform: translateX(-280px); transition: transform .25s; z-index:100; }
-    .admin-sidebar.open { transform: translateX(0); }
+    .admin-sidebar { 
+        position: absolute; 
+        transform: translateX(-280px); 
+        transition: transform .25s; 
+        z-index: 100; 
+    }
+    .admin-sidebar.open { 
+        transform: translateX(0); 
+    }
 }
 

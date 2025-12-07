@@ -12,19 +12,13 @@ class Booking extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'show_date',
-        'show_time',
         'created_ad',
         'user_id',
-        'movie_id',
         'session_id',
-        'hall_id',
         'seat_id',
     ];
 
     protected $casts = [
-        'show_date' => 'date',
-        'show_time' => 'datetime',
         'created_ad' => 'datetime',
     ];
 
@@ -35,7 +29,14 @@ class Booking extends Model
 
     public function movie()
     {
-        return $this->belongsTo(Movie::class, 'movie_id', 'id_movie');
+        return $this->hasOneThrough(
+            Movie::class,      // Related model (movies)
+            Session::class,    // Through model (cinema_sessions)
+            'movie_id',        // Foreign key on sessions table (sessions.movie_id -> movies.id_movie)
+            'id_movie',        // Foreign key on movies table
+            'session_id',      // Local key on bookings table
+            'id_session'       // Local key on sessions table
+        );
     }
 
     public function session()
@@ -45,7 +46,14 @@ class Booking extends Model
 
     public function hall()
     {
-        return $this->belongsTo(Hall::class, 'hall_id', 'id_hall');
+        return $this->hasOneThrough(
+            Hall::class,        // Related model (halls)
+            Session::class,     // Through model (cinema_sessions)
+            'hall_id',          // Foreign key on sessions table (sessions.hall_id -> halls.id_hall)
+            'id_hall',          // Foreign key on halls table
+            'session_id',       // Local key on bookings table
+            'id_session'        // Local key on sessions table
+        );
     }
 
     public function seat()
@@ -62,13 +70,29 @@ class Booking extends Model
     }
 
     /**
+     * Accessor для получения movie через session (для обратной совместимости)
+     */
+    public function getMovieAttribute()
+    {
+        return $this->session->movie ?? null;
+    }
+
+    /**
+     * Accessor для получения hall через session (для обратной совместимости)
+     */
+    public function getHallAttribute()
+    {
+        return $this->session->hall ?? null;
+    }
+
+    /**
      * Освобождает места с истекшим временем оплаты бронирования
      * Вызывается автоматически при работе с бронированиями
      * 
-     * @param int $paymentTimeoutMinutes Время на оплату в минутах (по умолчанию 15)
+     * @param int $paymentTimeoutMinutes Время на оплату в минутах (по умолчанию 10)
      * @return int Количество освобожденных бронирований
      */
-    public static function expireOldBookings($paymentTimeoutMinutes = 15)
+    public static function expireOldBookings($paymentTimeoutMinutes = 10)
     {
         $expirationTime = Carbon::now()->subMinutes($paymentTimeoutMinutes);
 
@@ -95,28 +119,9 @@ class Booking extends Model
                     $booking->payment->save();
                 }
 
-                // Освобождаем место, если оно было помечено как "Забронировано"
-                if ($booking->seat) {
-                    // Проверяем, что нет других активных бронирований на это место для этого сеанса
-                    $activeBookings = static::where('seat_id', $booking->seat_id)
-                        ->where('session_id', $booking->session_id)
-                        ->where('id_booking', '!=', $booking->id_booking)
-                        ->whereHas('payment', function($query) {
-                            $query->whereIn('payment_status', ['ожидание', 'оплачено', 'ожидает_подтверждения']);
-                        })
-                        ->exists();
-
-                    // Если нет других активных бронирований, освобождаем место
-                    if (!$activeBookings) {
-                        if ($booking->seat->status === 'Забронировано') {
-                            $booking->seat->status = 'Свободно';
-                            $booking->seat->save();
-                        }
-                        $freedSeats++;
-                    }
-                } else {
-                    $freedSeats++;
-                }
+                // НЕ меняем статус места - забронированность определяется только по bookings для конкретного session_id
+                // Место может быть забронировано на другие сеансы, поэтому не нужно менять его статус
+                $freedSeats++;
 
                 // Удаляем бронирование
                 $booking->delete();

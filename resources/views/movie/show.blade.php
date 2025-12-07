@@ -26,7 +26,7 @@
 
             <p class="mt-4">{{ $movie->description }}</p>
 
-            <a href="{{ route('booking.show', $movie->id_movie) }}" class="btn btn-danger mt-3">
+            <a href="{{ route('sessions') }}#movie-{{ $movie->id_movie }}" class="btn btn-danger mt-3">
                 <i class="bi bi-ticket-perforated"></i> Забронировать билет
             </a>
         </div>

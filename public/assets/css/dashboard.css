@@ -1,74 +1,282 @@
-/* Netflix-like стили для личного кабинета - без анимаций */
-
-body {
-    background-color: var(--bg-primary);
-}
-
-.user-dashboard {
-    background: var(--bg-primary);
-    min-height: 100vh;
-}
-
-/* Убираем все анимации и переходы */
-* {
-    transition: none !important;
-    animation: none !important;
-}
-
-.card {
-    color: var(--text-primary);
-    border-radius: 4px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-secondary);
-}
-
-.btn-danger {
-    background-color: var(--accent-primary);
-    border: none;
-    transition: none !important;
-}
-
-.btn-danger:hover {
-    background-color: var(--accent-hover);
-    transition: none !important;
-}
-
-.form-control {
-    border: 1px solid var(--input-border);
-    background: var(--input-bg);
-    color: var(--text-primary);
-    transition: none !important;
-}
-
-.form-control:focus {
-    outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
-    background-color: var(--input-bg);
-    border-color: var(--input-focus-border);
-    transition: none !important;
-}
-
-/* Убираем анимации модальных окон */
-.modal {
-    transition: none !important;
-}
-
-.modal.fade .modal-dialog {
-    transition: none !important;
-    transform: none !important;
-}
-
-.modal.show .modal-dialog {
-    transform: none !important;
-}
-
-/* Убираем анимации алертов */
-.alert {
-    transition: none !important;
-    animation: none !important;
-}
-
-/* Убираем hover эффекты с анимациями */
-.btn:hover {
-    transition: none !important;
-}
+    /* Netflix-like стили для личного кабинета */
+    .user-dashboard {
+        background: var(--bg-primary);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .dashboard-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-secondary);
+        border-radius: 4px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .dashboard-title {
+        color: var(--accent-primary);
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.5px;
+    }
+    
+    .profile-section h5 {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .profile-section p {
+        color: var(--text-primary);
+        font-size: 1rem;
+        margin-bottom: 0;
+        font-weight: 400;
+    }
+    
+    .btn-netflix {
+        background: var(--accent-primary);
+        color: var(--text-primary);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 4px;
+        transition: none;
+    }
+    
+    .btn-netflix:hover {
+        background: var(--accent-hover);
+        color: var(--text-primary);
+    }
+    
+    .btn-netflix-outline {
+        background: transparent;
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 4px;
+        transition: none;
+    }
+    
+    .btn-netflix-outline:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    
+    .btn-netflix-danger {
+        background: transparent;
+        color: var(--accent-primary);
+        border: 1px solid var(--accent-primary);
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        transition: none;
+    }
+    
+    .btn-netflix-danger:hover {
+        background: var(--accent-primary);
+        color: var(--text-primary);
+    }
+    
+    .btn-netflix-primary {
+        background: var(--accent-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--accent-primary);
+        padding: 0.375rem 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        transition: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .btn-netflix-primary:hover {
+        background: var(--accent-hover);
+        border-color: var(--accent-hover);
+        color: var(--text-primary);
+    }
+    
+    .btn-netflix-danger {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .bookings-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.5px;
+    }
+    
+    .booking-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-secondary);
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .booking-card h5 {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .booking-info {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .booking-info strong {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+    
+    .booking-value {
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-netflix {
+        padding: 0.375rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-success {
+        background: #46d369;
+        color: #000;
+    }
+    
+    .badge-warning {
+        background: #ffa00a;
+        color: #000;
+    }
+    
+    .badge-info {
+        background: #0071eb;
+        color: #fff;
+    }
+    
+    .alert-netflix {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-secondary);
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+    
+    .alert-success {
+        border-left: 4px solid #46d369;
+    }
+    
+    .alert-danger {
+        border-left: 4px solid var(--accent-primary);
+    }
+    
+    .alert-info {
+        border-left: 4px solid #0071eb;
+    }
+    
+    .modal-netflix .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-secondary);
+        border-radius: 4px;
+    }
+    
+    .modal-netflix .modal-header {
+        border-bottom: 1px solid var(--border-secondary);
+        padding: 1.5rem;
+    }
+    
+    .modal-netflix .modal-title {
+        color: var(--accent-primary);
+        font-weight: 700;
+    }
+    
+    .modal-netflix .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-netflix .form-label {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-netflix .form-control {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        color: var(--text-primary);
+        border-radius: 4px;
+        padding: 0.75rem;
+    }
+    
+    .modal-netflix .form-control:focus {
+        background: var(--input-bg);
+        border-color: var(--input-focus-border);
+        color: var(--text-primary);
+        box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
+    }
+    
+    .modal-netflix .modal-footer {
+        border-top: 1px solid var(--border-secondary);
+        padding: 1.5rem;
+    }
+    
+    .text-muted-netflix {
+        color: var(--text-secondary);
+    }
+    
+    .delete-account-section {
+        border-top: 1px solid var(--border-secondary);
+        padding-top: 2rem;
+        margin-top: 2rem;
+    }
+    
+    /* Стили для пагинации */
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-link {
+        background-color: var(--bg-secondary);
+        border-color: var(--border-secondary);
+        color: var(--text-primary);
+        padding: 0.5rem 1rem;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: var(--bg-card);
+        border-color: var(--accent-primary);
+        color: var(--accent-primary);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: var(--accent-primary);
+        border-color: var(--accent-primary);
+        color: var(--text-primary);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background-color: var(--bg-secondary);
+        border-color: var(--border-secondary);
+        color: var(--text-secondary);
+        opacity: 0.5;
+    }

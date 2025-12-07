@@ -21,7 +21,7 @@
                     @endif
                     
                     <div class="booking-details bg-secondary rounded p-4 mb-4 text-start">
-                        <h4 class="mb-4">{{ $booking->movie->movie_title }}</h4>
+                        <h4 class="mb-4">{{ $booking->session->movie->movie_title ?? 'Фильм не найден' }}</h4>
                         
                         <div class="row mb-3">
                             <div class="col-sm-4"><strong>Дата и время:</strong></div>
@@ -51,11 +51,6 @@
                             <div class="row mb-3">
                                 <div class="col-sm-4"><strong>Место:</strong></div>
                                 <div class="col-sm-8">Ряд {{ $booking->seat->row_number }}, Место {{ $booking->seat->seat_number }}</div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Номер бронирования:</strong></div>
-                                <div class="col-sm-8">#{{ $booking->id_booking }}</div>
                             </div>
                         @endif
                     </div>

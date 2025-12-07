@@ -15,31 +15,63 @@ use Carbon\Carbon;
 class BookingController extends Controller
 {
     /**
-     * Показать страницу бронирования для конкретного фильма
+     * Показать страницу бронирования для конкретного сеанса
      */
-    public function show($movieId)
+    public function show($sessionId)
     {
         // Автоматически освобождаем истекшие бронирования
         Booking::expireOldBookings();
         
-        $movie = Movie::with('genres')->findOrFail($movieId);
+        // Получаем сеанс с фильмом и залом
+        $session = Session::with(['movie.genres', 'hall'])->findOrFail($sessionId);
+        
+        // Проверяем, что сеанс еще не прошел
+        if ($session->date_time_session < now()) {
+            return redirect()->route('sessions')->with('error', 'Этот сеанс уже прошел');
+        }
+        
+        // Проверяем, что у сеанса есть привязанный зал
+        if (!$session->hall_id || !$session->hall) {
+            return redirect()->route('sessions')->with('error', 'Для данного сеанса не указан зал');
+        }
+        
+        $movie = $session->movie;
         
         // Исправляем пути к изображениям
         $movie->poster = $this->fixPath($movie->poster, 'images/posters/placeholder.jpg');
         $movie->baner = $this->fixPath($movie->baner, 'images/banners/placeholder.jpg');
         
-        // Получаем доступные сеансы для этого фильма (только будущие)
-        $sessions = Session::where('movie_id', $movieId)
-            ->where('date_time_session', '>=', now())
-            ->orderBy('date_time_session', 'asc')
-            ->get();
+        // Получаем зал с местами
+        $hall = $session->hall;
+        $seats = Seat::where('hall_id', $hall->id_hall)->orderBy('row_number')->orderBy('seat_number')->get();
         
-        // Группируем сеансы по датам
-        $sessionsByDate = $sessions->groupBy(function($session) {
-            return $session->date_time_session->format('Y-m-d');
-        });
+        // Получаем забронированные места для этого сеанса
+        $paymentTimeoutMinutes = 10;
+        $expirationTime = Carbon::now()->subMinutes($paymentTimeoutMinutes);
         
-        return view('booking.show', compact('movie', 'sessions', 'sessionsByDate'));
+        $bookedSeatIds = Booking::where('session_id', $sessionId)
+            ->where(function($query) use ($expirationTime) {
+                $query->whereHas('payment', function($q) {
+                    $q->whereIn('payment_status', ['оплачено', 'ожидает_подтверждения']);
+                })
+                ->orWhere(function($subQuery) use ($expirationTime) {
+                    $subQuery->where('created_ad', '>', $expirationTime)
+                             ->whereHas('payment', function($q) {
+                                 $q->where('payment_status', 'ожидание');
+                             });
+                });
+            })
+            ->pluck('seat_id')
+            ->toArray();
+        
+        // Помечаем места как забронированные
+        foreach ($seats as $seat) {
+            $seat->is_booked = in_array($seat->id_seat, $bookedSeatIds);
+        }
+        
+        $hall->seats = $seats;
+        
+        return view('booking.show', compact('session', 'movie', 'hall'));
     }
     
     /**
@@ -70,21 +102,27 @@ class BookingController extends Controller
         $paymentTimeoutMinutes = 10; // Время на оплату в минутах
         $expirationTime = Carbon::now()->subMinutes($paymentTimeoutMinutes);
         
+        // ВАЖНО: Проверяем ТОЛЬКО для конкретного session_id
+        // Ищем активные бронирования (оплаченные, ожидающие подтверждения, или не истекшие "ожидание")
         $bookedSeatIds = Booking::where('session_id', $sessionId)
-            ->whereHas('payment', function($query) {
-                $query->where('payment_status', '!=', 'отменено');
-            })
             ->where(function($query) use ($expirationTime) {
-                // Исключаем истекшие бронирования со статусом "ожидание"
+                // Оплаченные или ожидающие подтверждения
                 $query->whereHas('payment', function($q) {
-                    $q->where('payment_status', '!=', 'ожидание');
+                    $q->whereIn('payment_status', ['оплачено', 'ожидает_подтверждения']);
                 })
-                ->orWhere('created_ad', '>', $expirationTime);
+                // Или "ожидание", но не истекшие
+                ->orWhere(function($subQuery) use ($expirationTime) {
+                    $subQuery->where('created_ad', '>', $expirationTime)
+                             ->whereHas('payment', function($q) {
+                                 $q->where('payment_status', 'ожидание');
+                             });
+                });
             })
             ->pluck('seat_id')
             ->toArray();
         
-        // Помечаем места как забронированные и преобразуем в массив
+        // Помечаем места как забронированные ТОЛЬКО на основе bookings для ЭТОГО КОНКРЕТНОГО СЕАНСА
+        // НЕ используем статус места, так как одно место может быть забронировано на разные сеансы
         $seatsArray = $seats->map(function($seat) use ($bookedSeatIds) {
             return [
                 'id_seat' => $seat->id_seat,
@@ -92,7 +130,7 @@ class BookingController extends Controller
                 'seat_number' => $seat->seat_number,
                 'status' => $seat->status,
                 'hall_id' => $seat->hall_id,
-                'is_booked' => in_array($seat->id_seat, $bookedSeatIds) || $seat->status === 'Забронировано',
+                'is_booked' => in_array($seat->id_seat, $bookedSeatIds), // ТОЛЬКО по bookings для этого session_id
             ];
         })->values();
         
@@ -157,33 +195,31 @@ class BookingController extends Controller
         $paymentTimeoutMinutes = 10; // Время на оплату в минутах
         $expirationTime = Carbon::now()->subMinutes($paymentTimeoutMinutes);
         
+        // ВАЖНО: Проверяем ТОЛЬКО для конкретного session_id и конкретных seat_id
+        // Ищем активные бронирования (оплаченные, ожидающие подтверждения, или не истекшие "ожидание")
         $existingBookings = Booking::where('session_id', $validated['session_id'])
             ->whereIn('seat_id', $seatIds)
-            ->whereHas('payment', function($query) {
-                $query->where('payment_status', '!=', 'отменено');
-            })
             ->where(function($query) use ($expirationTime) {
-                // Исключаем истекшие бронирования со статусом "ожидание"
+                // Оплаченные или ожидающие подтверждения
                 $query->whereHas('payment', function($q) {
-                    $q->where('payment_status', '!=', 'ожидание');
+                    $q->whereIn('payment_status', ['оплачено', 'ожидает_подтверждения']);
                 })
-                ->orWhere('created_ad', '>', $expirationTime);
+                // Или "ожидание", но не истекшие
+                ->orWhere(function($subQuery) use ($expirationTime) {
+                    $subQuery->where('created_ad', '>', $expirationTime)
+                             ->whereHas('payment', function($q) {
+                                 $q->where('payment_status', 'ожидание');
+                             });
+                });
             })
-            ->pluck('seat_id')
-            ->toArray();
+            ->exists();
         
-        if (!empty($existingBookings)) {
+        if ($existingBookings) {
             return back()->with('error', 'Одно или несколько мест уже забронированы на данный сеанс');
         }
         
-        // Проверяем, что места не забронированы в статусе
-        $bookedSeats = $seats->filter(function($seat) {
-            return $seat->status === 'Забронировано';
-        });
-        
-        if ($bookedSeats->isNotEmpty()) {
-            return back()->with('error', 'Одно или несколько мест уже забронированы');
-        }
+        // НЕ проверяем статус места, так как одно место может быть забронировано на разные сеансы
+        // Забронированность определяется ТОЛЬКО по bookings для конкретного session_id
         
         // Сохраняем данные в сессии для создания платежа
         session([
@@ -202,7 +238,7 @@ class BookingController extends Controller
      */
     public function success($bookingId)
     {
-        $booking = Booking::with(['movie', 'session', 'hall', 'seat'])
+        $booking = Booking::with(['session.movie', 'session', 'hall', 'seat'])
             ->findOrFail($bookingId);
         
         // Проверяем, что бронирование принадлежит текущему пользователю
@@ -217,7 +253,7 @@ class BookingController extends Controller
             session()->forget('last_booking_ids'); // Удаляем после использования
             
             // Загружаем все бронирования
-            $allBookings = Booking::with(['movie', 'session', 'hall', 'seat'])
+            $allBookings = Booking::with(['session.movie', 'session', 'hall', 'seat'])
                 ->whereIn('id_booking', $bookingIds)
                 ->where('user_id', Auth::id())
                 ->get();
@@ -226,9 +262,8 @@ class BookingController extends Controller
         return view('booking.success', compact('booking', 'allBookings'));
     }
     
-    /**
-     * Исправление путей к изображениям
-     */
+
+// Исправление путей к изображениям
     private function fixPath($path, $placeholder)
     {
         if (!$path) return asset($placeholder);

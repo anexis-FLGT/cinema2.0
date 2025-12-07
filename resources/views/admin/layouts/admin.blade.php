@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin — @yield('title', 'Dashboard')</title>
+
+    {{-- Применяем тему сразу, до загрузки CSS --}}
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 
     {{-- Bootstrap 5 (локально или CDN) --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,6 +19,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     {{-- Админ стили --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/theme.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}">
     @stack('head')
 </head>
@@ -32,6 +41,9 @@
             </div>
 
             <div class="d-flex align-items-center gap-3">
+                <button id="theme-toggle" class="btn btn-outline-secondary btn-sm theme-toggle" title="Переключить тему">
+                    <i class="bi bi-sun-fill"></i>
+                </button>
                 <a href="{{ route('home') }}" class="btn btn-light btn-sm">На сайт</a>
 
                 <div class="dropdown">
@@ -56,6 +68,7 @@
 
 {{-- Скрипты --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('assets/js/theme.js') }}"></script>
 <script src="{{ asset('assets/js/admin.js') }}"></script>
 @stack('scripts')
 </body>

@@ -14,7 +14,9 @@ class MovieController extends Controller
      */
     public function index()
     {
-        $movies = Movie::with('genres')->paginate(10);
+        $movies = Movie::with(['genres', 'sessions' => function($query) {
+            $query->where('date_time_session', '>', now());
+        }])->paginate(10);
         // Получаем уникальные жанры из pivot таблицы или из таблицы genres
         // Получаем уникальные жанры (если в таблице genres есть movie_id, используем distinct)
         $genres = Genre::select('id_genre', 'genre_name')
@@ -33,12 +35,15 @@ class MovieController extends Controller
         $validated = $request->validate([
             'movie_title' => 'required|string|max:255',
             'duration' => 'required|string|max:255',
+            'release_year' => 'required|integer|min:1900|max:' . date('Y'),
             'age_limit' => 'required|string|max:10',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
+            'director' => 'required|string|max:255',
             'producer' => 'required|string|max:255',
-            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'baner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'genres' => 'array'
+            'poster' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'baner' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'genres' => 'required|array|min:1',
+            'genres.*' => 'exists:genres,id_genre'
         ]);
 
         // Загрузка файлов
@@ -56,17 +61,17 @@ class MovieController extends Controller
         $movie = Movie::create([
             'movie_title' => $validated['movie_title'],
             'duration' => $validated['duration'],
+            'release_year' => $validated['release_year'] ?? null,
             'age_limit' => $validated['age_limit'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
+            'director' => $validated['director'] ?? null,
             'producer' => $validated['producer'],
             'poster' => $posterPath,
             'baner' => $banerPath,
         ]);
 
-        // Привязка жанров
-        if (!empty($validated['genres'])) {
-            $movie->genres()->sync($validated['genres']);
-        }
+        // Привязка жанров (обязательно)
+        $movie->genres()->sync($validated['genres']);
 
         return redirect()->route('admin.movies.index')->with('success', 'Фильм добавлен.');
     }
@@ -78,15 +83,32 @@ class MovieController extends Controller
     {
         $movie = Movie::findOrFail($id);
 
+        // Проверяем наличие жанров перед валидацией
+        $genres = $request->input('genres', []);
+        
+        // Если жанры не переданы или пустой массив, возвращаем ошибку
+        if (empty($genres) || !is_array($genres) || count(array_filter($genres)) === 0) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['genres' => 'Необходимо выбрать хотя бы один жанр.']);
+        }
+
         $validated = $request->validate([
             'movie_title' => 'required|string|max:255',
             'duration' => 'required|string|max:255',
+            'release_year' => 'required|integer|min:1900|max:' . date('Y'),
             'age_limit' => 'required|string|max:10',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
+            'director' => 'required|string|max:255',
             'producer' => 'required|string|max:255',
             'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'baner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'genres' => 'array'
+            'genres' => 'required|array|min:1',
+            'genres.*' => 'exists:genres,id_genre'
+        ], [
+            'genres.required' => 'Необходимо выбрать хотя бы один жанр.',
+            'genres.min' => 'Необходимо выбрать хотя бы один жанр.',
+            'genres.*.exists' => 'Выбранный жанр не существует.',
         ]);
 
         // Загрузка новых файлов при необходимости
@@ -106,17 +128,15 @@ class MovieController extends Controller
         $movie->update([
             'movie_title' => $validated['movie_title'],
             'duration' => $validated['duration'],
+            'release_year' => $validated['release_year'] ?? null,
             'age_limit' => $validated['age_limit'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
+            'director' => $validated['director'] ?? null,
             'producer' => $validated['producer'],
         ]);
 
-        // Синхронизация жанров
-        if (!empty($validated['genres'])) {
-            $movie->genres()->sync($validated['genres']);
-        } else {
-            $movie->genres()->detach();
-        }
+        // Синхронизация жанров (обязательно)
+        $movie->genres()->sync($validated['genres']);
 
         return redirect()->route('admin.movies.index')->with('success', 'Фильм обновлён.');
     }
@@ -128,12 +148,25 @@ class MovieController extends Controller
     {
         $movie = Movie::findOrFail($id);
 
+        // Проверяем наличие активных (будущих) сеансов
+        $activeSessionsCount = $movie->sessions()
+            ->where('date_time_session', '>', now())
+            ->count();
+
         // Удаляем связи с жанрами
         $movie->genres()->detach();
+
+        // Удаляем все сеансы фильма (включая активные)
+        $movie->sessions()->delete();
 
         // Удаляем фильм
         $movie->delete();
 
-        return redirect()->route('admin.movies.index')->with('success', 'Фильм удалён.');
+        $message = 'Фильм удалён.';
+        if ($activeSessionsCount > 0) {
+            $message .= " Также удалено {$activeSessionsCount} активных сеансов.";
+        }
+
+        return redirect()->route('admin.movies.index')->with('success', $message);
     }
 }

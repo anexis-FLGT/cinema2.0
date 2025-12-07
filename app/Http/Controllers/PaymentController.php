@@ -131,33 +131,31 @@ class PaymentController extends Controller
         $paymentTimeoutMinutes = 15; // Время на оплату в минутах
         $expirationTime = Carbon::now()->subMinutes($paymentTimeoutMinutes);
         
+        // ВАЖНО: Проверяем ТОЛЬКО для конкретного session_id и конкретных seat_id
+        // Ищем активные бронирования (оплаченные, ожидающие подтверждения, или не истекшие "ожидание")
         $existingBookings = Booking::where('session_id', $validated['session_id'])
             ->whereIn('seat_id', $seatIds)
-            ->whereHas('payment', function($query) {
-                $query->where('payment_status', '!=', 'отменено');
-            })
             ->where(function($query) use ($expirationTime) {
-                // Исключаем истекшие бронирования со статусом "ожидание"
+                // Оплаченные или ожидающие подтверждения
                 $query->whereHas('payment', function($q) {
-                    $q->where('payment_status', '!=', 'ожидание');
+                    $q->whereIn('payment_status', ['оплачено', 'ожидает_подтверждения']);
                 })
-                ->orWhere('created_ad', '>', $expirationTime);
+                // Или "ожидание", но не истекшие
+                ->orWhere(function($subQuery) use ($expirationTime) {
+                    $subQuery->where('created_ad', '>', $expirationTime)
+                             ->whereHas('payment', function($q) {
+                                 $q->where('payment_status', 'ожидание');
+                             });
+                });
             })
-            ->pluck('seat_id')
-            ->toArray();
+            ->exists();
 
-        if (!empty($existingBookings)) {
-            return back()->with('error', 'Одно или несколько мест уже забронированы');
+        if ($existingBookings) {
+            return back()->with('error', 'Одно или несколько мест уже забронированы на данный сеанс');
         }
 
-        // Проверяем статус мест
-        $bookedSeats = $seats->filter(function($seat) {
-            return $seat->status === 'Забронировано';
-        });
-
-        if ($bookedSeats->isNotEmpty()) {
-            return back()->with('error', 'Одно или несколько мест уже забронированы');
-        }
+        // НЕ проверяем статус места, так как одно место может быть забронировано на разные сеансы
+        // Забронированность определяется ТОЛЬКО по bookings для конкретного session_id
 
         // Рассчитываем стоимость
         $amountPerSeat = config('yookassa.ticket_price', 500.00);
@@ -166,14 +164,12 @@ class PaymentController extends Controller
         // Создаем временные бронирования (pending) для резервирования мест
         $pendingBookings = [];
         foreach ($seatIds as $seatId) {
+            // ВАЖНО: Создаем бронирование ТОЛЬКО с session_id и seat_id
+            // show_date, show_time, hall_id берутся из session через связи
             $booking = Booking::create([
-                'show_date' => $session->date_time_session->format('Y-m-d'),
-                'show_time' => $session->date_time_session->format('H:i:s'),
                 'created_ad' => now(),
                 'user_id' => Auth::id(),
-                'movie_id' => $session->movie_id,
-                'session_id' => $validated['session_id'],
-                'hall_id' => $hallId,
+                'session_id' => $validated['session_id'], // ВАЖНО: используем validated session_id
                 'seat_id' => $seatId,
             ]);
             
@@ -282,8 +278,8 @@ class PaymentController extends Controller
             $status = $payment->getStatus();
             $russianStatus = $this->convertStatusToRussian($status);
             
-            // Сохраняем movie_id для возможного редиректа
-            $movieId = $bookings->first()->movie_id ?? null;
+            // Сохраняем movie_id для возможного редиректа (через session)
+            $movieId = $bookings->first()->session->movie_id ?? null;
             
             // Обновляем статус оплаты
             $deletedBookingIds = [];
@@ -297,12 +293,7 @@ class PaymentController extends Controller
                 }
                 
                 if ($status === 'succeeded') {
-                    // Обновляем статус места
-                    $seat = Seat::find($booking->seat_id);
-                    if ($seat) {
-                        $seat->status = 'Забронировано';
-                        $seat->save();
-                    }
+                    // НЕ меняем статус места - забронированность определяется только по bookings для конкретного session_id
                 } elseif ($status === 'canceled') {
                     // Удаляем бронирование при отмене
                     $deletedBookingIds[] = $booking->id_booking;
@@ -329,19 +320,13 @@ class PaymentController extends Controller
                 return redirect()->route('booking.success', $activeBookings->first()->id_booking)
                     ->with('success', 'Оплата успешно завершена!');
             } elseif ($status === 'canceled') {
-                // При отмене возвращаем на страницу бронирования
-                if ($movieId) {
-                    return redirect()->route('booking.show', $movieId)
-                        ->with('error', 'Платеж был отменен');
-                }
-                return redirect()->route('home')->with('error', 'Платеж был отменен');
+                // При отмене возвращаем на страницу сеансов
+                return redirect()->route('sessions')
+                    ->with('error', 'Платеж был отменен');
             } else {
                 // Для других статусов
-                if ($movieId) {
-                    return redirect()->route('booking.show', $movieId)
-                        ->with('error', 'Платеж обрабатывается. Статус: ' . $status);
-                }
-                return redirect()->route('home')->with('error', 'Платеж обрабатывается');
+                return redirect()->route('sessions')
+                    ->with('error', 'Платеж обрабатывается. Статус: ' . $status);
             }
         } catch (\Exception $e) {
             Log::error('YooKassa callback error', [
@@ -443,15 +428,7 @@ class PaymentController extends Controller
             $payment->payment_status = 'оплачено';
             $payment->save();
 
-            $booking = $payment->booking;
-            if ($booking) {
-                // Обновляем статус места
-                $seat = Seat::find($booking->seat_id);
-                if ($seat) {
-                    $seat->status = 'Забронировано';
-                    $seat->save();
-                }
-            }
+            // НЕ меняем статус места - забронированность определяется только по bookings для конкретного session_id
         }
 
         Log::info('YooKassa payment succeeded', [

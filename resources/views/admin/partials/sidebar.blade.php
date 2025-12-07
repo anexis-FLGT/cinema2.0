@@ -1,4 +1,4 @@
-<aside class="admin-sidebar bg-light">
+<aside class="admin-sidebar">
     <div class="sidebar-header px-3 py-3 d-flex align-items-center">
         
     </div>
@@ -16,12 +16,12 @@
         <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
             <i class="bi bi-people me-2"></i> Пользователи
         </a>
+        <a href="{{ route('admin.genres.index') }}" class="nav-link {{ request()->routeIs('admin.genres*') ? 'active' : '' }}">
+            <i class="bi bi-tags me-2"></i> Жанры
+        </a>
         <a href="#" class="nav-link disabled">
             <i class="bi bi-bar-chart-line me-2"></i> Отчёты (скоро)
         </a>
     </nav>
 
-    <div class="sidebar-footer mt-auto px-3 py-3">
-        <small class="text-muted">Версия админки: 0.1</small>
-    </div>
 </aside>
