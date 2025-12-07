@@ -201,7 +201,13 @@
         </div>
 
         {{-- Пагинация --}}
-        <div class="mt-3">
+        @if($movies->hasPages())
+            <div class="mt-4">
+                {{ $movies->links('pagination::bootstrap-4') }}
+            </div>
+        @endif
+    </div>
+</div>
             {{ $movies->links() }}
         </div>
     </div>

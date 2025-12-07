@@ -129,6 +129,13 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Пагинация --}}
+        @if($users->hasPages())
+            <div class="mt-4">
+                {{ $users->links('pagination::bootstrap-4') }}
+            </div>
+        @endif
     </div>
 </div>
 

@@ -13,7 +13,9 @@ class GenreController extends Controller
      */
     public function index()
     {
-        $genres = Genre::orderBy('genre_name')->get();
+        $genres = Genre::withCount('movies')
+            ->orderBy('genre_name')
+            ->paginate(10);
         return view('admin.genres', compact('genres'));
     }
 

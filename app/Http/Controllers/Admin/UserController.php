@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Список пользователей без пагинации
+    // Список пользователей с пагинацией
     public function index()
     {
-        $users = User::with('role')->get();
+        $users = User::with('role')->paginate(10);
         // Исключаем роль "Гость" из списка для редактирования
         $roles = Role::where('role_name', '!=', 'Гость')->get();
 

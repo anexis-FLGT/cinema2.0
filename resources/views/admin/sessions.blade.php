@@ -118,9 +118,11 @@
         </div>
 
         {{-- Пагинация --}}
-        <div class="mt-3">
-            {{ $sessions->links() }}
-        </div>
+        @if($sessions->hasPages())
+            <div class="mt-4">
+                {{ $sessions->links('pagination::bootstrap-4') }}
+            </div>
+        @endif
     </div>
 </div>
 

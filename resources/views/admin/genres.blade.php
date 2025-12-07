@@ -44,7 +44,7 @@
                         <tr>
                             <td>{{ $genre->id_genre }}</td>
                             <td>{{ $genre->genre_name }}</td>
-                            <td>{{ $genre->movies()->count() }}</td>
+                            <td>{{ $genre->movies_count }}</td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editGenreModal{{ $genre->id_genre }}">
                                     <i class="bi bi-pencil"></i> Редактировать
@@ -123,6 +123,13 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Пагинация --}}
+        @if($genres->hasPages())
+            <div class="mt-4">
+                {{ $genres->links('pagination::bootstrap-4') }}
+            </div>
+        @endif
     </div>
 </div>
 
