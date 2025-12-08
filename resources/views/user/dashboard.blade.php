@@ -66,81 +66,110 @@
                         <i class="bi bi-info-circle me-2"></i>У вас пока нет активных бронирований.
                     </div>
                 @else
-                    @foreach($activeBookingsGrouped as $sessionDateTime => $bookingsGroup)
-                        <div class="mb-3">
-                            <h4 class="text-muted-netflix mb-2" style="font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="bi bi-calendar-event me-2"></i>
-                                Сеанс: {{ \Carbon\Carbon::parse($sessionDateTime)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}
-                            </h4>
-                            <div class="row g-2">
-                                @foreach($bookingsGroup as $booking)
-                                    <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="booking-card">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <div style="flex: 1;">
-                                                    <h5>{{ $booking->session->movie->movie_title ?? 'Фильм не найден' }}</h5>
-                                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-calendar-event me-1"></i>
-                                                            {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY') }}
-                                                        </div>
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-clock me-1"></i>
-                                                            {{ \Carbon\Carbon::parse($booking->session->date_time_session)->format('H:i') }}
-                                                        </div>
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-door-open me-1"></i>
-                                                            {{ $booking->hall->hall_name ?? 'Не указан' }}
-                                                        </div>
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-seat me-1"></i>
-                                                            Ряд {{ $booking->seat->row_number ?? '?' }}, Место {{ $booking->seat->seat_number ?? '?' }}
-                                                        </div>
-                                                        @if($booking->payment && $booking->payment->amount)
-                                                            <div class="booking-info">
-                                                                <i class="bi bi-currency-ruble me-1"></i>
-                                                                <strong>{{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽</strong>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-2">
-                                                    @if($booking->payment)
-                                                        @if($booking->payment->payment_status === 'оплачено')
-                                                            <span class="badge-netflix badge-success">Оплачено</span>
-                                                        @elseif($booking->payment->payment_status === 'ожидание')
-                                                            <span class="badge-netflix badge-warning">Ожидание</span>
-                                                        @elseif($booking->payment->payment_status === 'ожидает_подтверждения')
-                                                            <span class="badge-netflix badge-info">Ожидает</span>
-                                                        @endif
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex justify-content-end align-items-center pt-2" style="border-top: 1px solid var(--border-secondary);">
-                                                <div class="d-flex gap-2">
-                                                    @if($booking->payment && $booking->payment->payment_status === 'ожидание')
-                                                        <a href="{{ route('payment.retry', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;">
-                                                            <i class="bi bi-credit-card me-1"></i>Оплатить
-                                                        </a>
-                                                    @endif
-                                                    @if($booking->payment && ($booking->payment->payment_status === 'оплачено' || $booking->payment->payment_status === 'ожидание' || $booking->payment->payment_status === 'ожидает_подтверждения'))
-                                                        <form action="{{ route('user.booking.cancel', $booking->id_booking) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit" class="btn-netflix-danger" 
-                                                                    onclick="return confirm('Вы уверены, что хотите отменить бронирование? Место будет освобождено.')">
-                                                                <i class="bi bi-x-circle me-1"></i>Отменить
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
+                    {{-- выпадающий список для активных бронирований --}}
+                    <div class="accordion" id="activeBookingsAccordion">
+                        @foreach($activeBookingsGrouped as $sessionDateTime => $bookingsGroup)
+                            @php
+                                $firstBooking = $bookingsGroup->first();
+                                $movieTitle = $firstBooking->session->movie->movie_title ?? 'Фильм не найден';
+                                $sessionDate = \Carbon\Carbon::parse($sessionDateTime)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm');
+                                $accordionId = 'session_' . str_replace([' ', ':', ','], '_', $sessionDateTime);
+                            @endphp
+                            <div class="accordion-item mb-2" style="background-color: var(--bg-secondary); border: 1px solid var(--border-secondary); border-radius: 8px;">
+                                <h2 class="accordion-header" id="heading{{ $loop->index }}">
+                                    <button class="accordion-button {{ $loop->first ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $loop->index }}" aria-expanded="{{ $loop->first ? 'true' : 'false' }}" aria-controls="collapse{{ $loop->index }}" style="background-color: var(--bg-secondary); color: var(--text-primary); font-weight: 600;">
+                                        <div class="w-100">
+                                            <div class="d-flex align-items-center flex-wrap">
+                                                <i class="bi bi-calendar-event me-2"></i>
+                                                <span style="text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem;">
+                                                    Сеанс: {{ $sessionDate }}
+                                                </span> 
+                                                <span class="ms-3" style="font-size: 0.95rem; font-weight: 500; text-transform: none;">
+                                                 {{ $movieTitle }}
+                                                </span>
                                             </div>
                                         </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ $loop->index }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" aria-labelledby="heading{{ $loop->index }}" data-bs-parent="#activeBookingsAccordion">
+                                    <div class="accordion-body" style="background-color: var(--bg-primary);">
+                                        <div class="row g-2">
+                                            @foreach($bookingsGroup as $booking)
+                                                <div class="col-12 col-md-6 col-lg-4">
+                                                    <div class="booking-card">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div style="flex: 1;">
+                                                                <h5>{{ $booking->session->movie->movie_title ?? 'Фильм не найден' }}</h5>
+                                                                <div class="d-flex flex-wrap gap-3 mb-2">
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-calendar-event me-1"></i>
+                                                                        {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY') }}
+                                                                    </div>
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-clock me-1"></i>
+                                                                        {{ \Carbon\Carbon::parse($booking->session->date_time_session)->format('H:i') }}
+                                                                    </div>
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-door-open me-1"></i>
+                                                                        {{ $booking->hall->hall_name ?? 'Не указан' }}
+                                                                    </div>
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-seat me-1"></i>
+                                                                        Ряд {{ $booking->seat->row_number ?? '?' }}, Место {{ $booking->seat->seat_number ?? '?' }}
+                                                                    </div>
+                                                                    @if($booking->payment && $booking->payment->amount)
+                                                                        <div class="booking-info">
+                                                                            <i class="bi bi-currency-ruble me-1"></i>
+                                                                            <strong>{{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽</strong>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-end ms-2">
+                                                                @if($booking->payment)
+                                                                    @if($booking->payment->payment_status === 'оплачено')
+                                                                        <span class="badge-netflix badge-success">Оплачено</span>
+                                                                    @elseif($booking->payment->payment_status === 'ожидание')
+                                                                        <span class="badge-netflix badge-warning">Ожидание</span>
+                                                                    @elseif($booking->payment->payment_status === 'ожидает_подтверждения')
+                                                                        <span class="badge-netflix badge-info">Ожидает</span>
+                                                                    @endif
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex justify-content-end align-items-center pt-2" style="border-top: 1px solid var(--border-secondary);">
+                                                            <div class="d-flex gap-2">
+                                                                @if($booking->payment && $booking->payment->payment_status === 'оплачено')
+                                                                    <a href="{{ route('user.ticket.pdf', $booking->id_booking) }}" class="btn-ticket-print" style="text-decoration: none;" target="_blank">
+                                                                        <i class="bi bi-file-earmark-pdf me-1"></i>Печать билета
+                                                                    </a>
+                                                                @endif
+                                                                @if($booking->payment && $booking->payment->payment_status === 'ожидание')
+                                                                    <a href="{{ route('payment.retry', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;">
+                                                                        <i class="bi bi-credit-card me-1"></i>Оплатить
+                                                                    </a>
+                                                                @endif
+                                                                @if($booking->payment && ($booking->payment->payment_status === 'оплачено' || $booking->payment->payment_status === 'ожидание' || $booking->payment->payment_status === 'ожидает_подтверждения'))
+                                                                    <form action="{{ route('user.booking.cancel', $booking->id_booking) }}" method="POST" class="d-inline">
+                                                                        @csrf
+                                                                        <button type="submit" class="btn-netflix-danger" 
+                                                                                onclick="return confirm('Вы уверены, что хотите отменить бронирование? Место будет освобождено.')">
+                                                                            <i class="bi bi-x-circle me-1"></i>Отменить
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
-                                @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                     
                     {{-- Пагинация для активных бронирований --}}
                     @if($activeBookings->hasPages())
@@ -155,6 +184,7 @@
                 <form action="{{ route('user.deleteAccount') }}" method="POST" id="deleteForm">
                     @csrf
                     @method('DELETE')
+                    <input type="hidden" name="confirm_with_bookings" id="confirmWithBookings" value="0">
                     <button type="submit" class="btn-netflix-danger">Удалить аккаунт</button>
                 </form>
             </div>
@@ -266,9 +296,28 @@ if (phoneInput) {
 }
 
 document.getElementById('deleteForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    
+    // Проверяем наличие активных бронирований
+    const hasActiveBookings = @json($activeBookings->count() > 0);
+    const confirmWithBookingsInput = document.getElementById('confirmWithBookings');
+    
+    // Первое подтверждение
     if (!confirm('Вы уверены, что хотите удалить аккаунт?')) {
-        e.preventDefault();
+        return;
     }
+    
+    // Если есть активные бронирования, показываем дополнительное предупреждение
+    if (hasActiveBookings) {
+        if (!confirm('⚠️ ВНИМАНИЕ! У вас есть активные бронирования. Все ваши бронирования будут удалены. Вы действительно хотите удалить аккаунт?')) {
+            return;
+        }
+        // Устанавливаем флаг подтверждения для отправки на сервер
+        confirmWithBookingsInput.value = '1';
+    }
+    
+    // Отправляем форму
+    this.submit();
 });
 
 // Переключение видимости полей пароля
@@ -397,6 +446,44 @@ if (profileForm) {
     [data-theme="light"] #phone::placeholder {
         color: #000000 !important; /* Черный для светлой темы */
         opacity: 0.6;
+    }
+
+    /* Стили для стрелочки аккордеона в темной теме - белый цвет */
+    #activeBookingsAccordion .accordion-button::after {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Для светлой темы возвращаем стандартный цвет */
+    [data-theme="light"] #activeBookingsAccordion .accordion-button::after {
+        filter: none;
+    }
+
+    /* Изменение подсветки активного аккордеона с синего на красный */
+
+
+    #activeBookingsAccordion .accordion-button:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    /* Стили для кнопки печати билета */
+    .btn-ticket-print {
+        background: #0d6efd;
+        color: #ffffff;
+        border: 1px solid #0d6efd;
+        padding: 0.375rem 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-ticket-print:hover {
+        background: #0b5ed7;
+        border-color: #0b5ed7;
+        color: #ffffff;
     }
 </style>
 @endsection

@@ -6,6 +6,11 @@ header {
     background-color: var(--bg-header); 
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
 }
 
 header a.nav-link {

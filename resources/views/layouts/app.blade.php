@@ -31,7 +31,7 @@
 <body class="d-flex flex-column min-vh-100" style="background-color: var(--bg-primary); color: var(--text-primary);">
 
     {{-- ======== HEADER ======== --}}
-    <header class="header py-3 border-bottom" style="background-color: var(--bg-header); border-color: var(--border-color) !important;">
+    <header class="header py-3 border-bottom sticky-header" style="background-color: var(--bg-header); border-color: var(--border-color) !important;">
         <div class="container d-flex align-items-center justify-content-between">
             {{-- Логотип --}}
             <a href="{{ route('home') }}" class="d-flex align-items-center text-decoration-none">
@@ -111,7 +111,7 @@
     {{-- Theme Toggle JS --}}
     <script src="{{ asset('assets/js/theme.js') }}"></script>
 
-    {{-- Стили для дропдаун меню в хедере --}}
+    {{-- Стили для дропдаун меню в хедере и фиксированного хедера --}}
     <style>
         .dropdown-menu .dropdown-item:hover,
         .dropdown-menu .dropdown-item:focus,
@@ -126,6 +126,32 @@
             background-color: var(--bg-tertiary) !important;
             color: #dc3545 !important;
         }
+
+        /* Фиксированный хедер при прокрутке */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        /* Улучшенная тень при прокрутке */
+        .sticky-header.scrolled {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
     </style>
+
+    {{-- Скрипт для добавления класса при прокрутке --}}
+    <script>
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.sticky-header');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
 </body>
 </html>

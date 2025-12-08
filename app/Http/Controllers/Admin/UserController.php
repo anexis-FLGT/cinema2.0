@@ -51,6 +51,12 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
+        // Проверка: активный администратор не может изменить свою роль
+        if (auth()->user()->id_user == $user->id_user && $user->role_id == 1) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Нельзя изменить роль активного администратора.');
+        }
+
         $validated = $request->validate([
             'role_id' => 'required|exists:roles,id_role',
         ]);

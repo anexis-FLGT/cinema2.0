@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Booking;
 use App\Models\Seat;
+use App\Models\Payment;
 
 class UserController extends Controller
 {
@@ -118,9 +120,45 @@ class UserController extends Controller
     public function deleteAccount(Request $request)
     {
         $user = Auth::user();
+        $now = \Carbon\Carbon::now();
 
+        // Проверяем наличие активных бронирований
+        $activeBookingsCount = Booking::with('payment')
+            ->join('cinema_sessions', 'bookings.session_id', '=', 'cinema_sessions.id_session')
+            ->where('bookings.user_id', $user->id_user)
+            ->whereHas('payment', function($query) {
+                $query->where('payment_status', '!=', 'отменено');
+            })
+            ->where('cinema_sessions.date_time_session', '>', $now)
+            ->count();
+
+        // Если есть активные бронирования и пользователь не подтвердил удаление с предупреждением
+        if ($activeBookingsCount > 0 && $request->input('confirm_with_bookings') != '1') {
+            return redirect()->route('user.dashboard')
+                ->with('error', 'У вас есть активные бронирования. Если вы действительно хотите удалить аккаунт, подтвердите удаление ещё раз.');
+        }
+
+        // Используем транзакцию для безопасного удаления всех связанных данных
+        DB::transaction(function () use ($user) {
+            // Получаем ID всех бронирований пользователя
+            $bookingIds = Booking::where('user_id', $user->id_user)->pluck('id_booking');
+            
+            // Удаляем все платежи, связанные с бронированиями пользователя
+            if ($bookingIds->isNotEmpty()) {
+                Payment::whereIn('booking_id', $bookingIds)->delete();
+            }
+            
+            // Удаляем все бронирования пользователя
+            Booking::where('user_id', $user->id_user)->delete();
+            
+            // Удаляем самого пользователя
+            $user->delete();
+        });
+
+        // Выходим из системы после успешного удаления
         Auth::logout();
-        $user->delete();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Ваш аккаунт успешно удалён.');
     }

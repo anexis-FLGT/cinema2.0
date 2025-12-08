@@ -57,13 +57,23 @@ class MovieController extends Controller
         if ($posterPath) $request->file('poster')->move(public_path('images/posters'), basename($posterPath));
         if ($banerPath) $request->file('baner')->move(public_path('images/baners'), basename($banerPath));
 
+        // Обработка описания - убираем лишние пробелы
+        $description = $validated['description'] ?? null;
+        if ($description) {
+            $description = trim($description);
+            // Убираем множественные пробелы и переносы строк в начале
+            $description = preg_replace('/^\s+/m', '', $description);
+            // Нормализуем множественные пробелы
+            $description = preg_replace('/[ \t]+/', ' ', $description);
+        }
+
         // Создание фильма
         $movie = Movie::create([
             'movie_title' => $validated['movie_title'],
             'duration' => $validated['duration'],
             'release_year' => $validated['release_year'] ?? null,
             'age_limit' => $validated['age_limit'],
-            'description' => $validated['description'] ?? null,
+            'description' => $description,
             'director' => $validated['director'] ?? null,
             'producer' => $validated['producer'],
             'poster' => $posterPath,
@@ -124,13 +134,23 @@ class MovieController extends Controller
             $movie->baner = $banerPath;
         }
 
+        // Обработка описания - убираем лишние пробелы
+        $description = $validated['description'] ?? null;
+        if ($description) {
+            $description = trim($description);
+            // Убираем множественные пробелы и переносы строк в начале
+            $description = preg_replace('/^\s+/m', '', $description);
+            // Нормализуем множественные пробелы
+            $description = preg_replace('/[ \t]+/', ' ', $description);
+        }
+
         // Обновление данных фильма
         $movie->update([
             'movie_title' => $validated['movie_title'],
             'duration' => $validated['duration'],
             'release_year' => $validated['release_year'] ?? null,
             'age_limit' => $validated['age_limit'],
-            'description' => $validated['description'] ?? null,
+            'description' => $description,
             'director' => $validated['director'] ?? null,
             'producer' => $validated['producer'],
         ]);

@@ -37,7 +37,7 @@ class LoginController extends Controller
                     return redirect()->route('admin.dashboard')
                         ->with('success', 'Добро пожаловать, администратор!');
                 case 2:
-                    return redirect()->route('user.dashboard')
+                    return redirect()->route('home')
                         ->with('success', 'Добро пожаловать!');
                 default:
                     return redirect()->route('guest.home')

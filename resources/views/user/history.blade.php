@@ -34,58 +34,89 @@
                         <i class="bi bi-info-circle me-2"></i>У вас пока нет завершенных бронирований.
                     </div>
                 @else
-                    @foreach($historyBookingsGrouped as $sessionDateTime => $bookingsGroup)
-                        <div class="mb-3">
-                            <h4 class="text-muted-netflix mb-2" style="font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="bi bi-calendar-event me-2"></i>
-                                Сеанс: {{ \Carbon\Carbon::parse($sessionDateTime)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}
-                            </h4>
-                            <div class="row g-2">
-                                @foreach($bookingsGroup as $booking)
-                                    <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="booking-card">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <div style="flex: 1;">
-                                                    <h5>{{ $booking->session->movie->movie_title ?? 'Фильм не найден' }}</h5>
-                                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-calendar-event me-1"></i>
-                                                            {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY') }}
-                                                        </div>
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-clock me-1"></i>
-                                                            {{ \Carbon\Carbon::parse($booking->session->date_time_session)->format('H:i') }}
-                                                        </div>
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-door-open me-1"></i>
-                                                            {{ $booking->hall->hall_name ?? 'Не указан' }}
-                                                        </div>
-                                                        <div class="booking-info">
-                                                            <i class="bi bi-seat me-1"></i>
-                                                            Ряд {{ $booking->seat->row_number ?? '?' }}, Место {{ $booking->seat->seat_number ?? '?' }}
-                                                        </div>
-                                                        @if($booking->payment && $booking->payment->amount)
-                                                            <div class="booking-info">
-                                                                <i class="bi bi-currency-ruble me-1"></i>
-                                                                <strong>{{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽</strong>
+                    {{-- Выпадающий список для истории бронирований --}}
+                    <div class="accordion" id="historyBookingsAccordion">
+                        @foreach($historyBookingsGrouped as $sessionDateTime => $bookingsGroup)
+                            @php
+                                $firstBooking = $bookingsGroup->first();
+                                $movieTitle = $firstBooking->session->movie->movie_title ?? 'Фильм не найден';
+                                $sessionDate = \Carbon\Carbon::parse($sessionDateTime)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm');
+                            @endphp
+                            <div class="accordion-item mb-2" style="background-color: var(--bg-secondary); border: 1px solid var(--border-secondary); border-radius: 8px;">
+                                <h2 class="accordion-header" id="headingHistory{{ $loop->index }}">
+                                    <button class="accordion-button {{ $loop->first ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHistory{{ $loop->index }}" aria-expanded="{{ $loop->first ? 'true' : 'false' }}" aria-controls="collapseHistory{{ $loop->index }}" style="background-color: var(--bg-secondary); color: var(--text-primary); font-weight: 600;">
+                                        <div class="w-100">
+                                            <div class="d-flex align-items-center flex-wrap">
+                                                <i class="bi bi-calendar-event me-2"></i>
+                                                <span style="text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem;">
+                                                    Сеанс: {{ $sessionDate }}
+                                                </span>
+                                                <span class="ms-3" style="font-size: 0.95rem; font-weight: 500; text-transform: none;">
+                                                    {{ $movieTitle }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapseHistory{{ $loop->index }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" aria-labelledby="headingHistory{{ $loop->index }}" data-bs-parent="#historyBookingsAccordion">
+                                    <div class="accordion-body" style="background-color: var(--bg-primary);">
+                                        <div class="row g-2">
+                                            @foreach($bookingsGroup as $booking)
+                                                <div class="col-12 col-md-6 col-lg-4">
+                                                    <div class="booking-card">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div style="flex: 1;">
+                                                                <h5>{{ $booking->session->movie->movie_title ?? 'Фильм не найден' }}</h5>
+                                                                <div class="d-flex flex-wrap gap-3 mb-2">
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-calendar-event me-1"></i>
+                                                                        {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY') }}
+                                                                    </div>
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-clock me-1"></i>
+                                                                        {{ \Carbon\Carbon::parse($booking->session->date_time_session)->format('H:i') }}
+                                                                    </div>
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-door-open me-1"></i>
+                                                                        {{ $booking->hall->hall_name ?? 'Не указан' }}
+                                                                    </div>
+                                                                    <div class="booking-info">
+                                                                        <i class="bi bi-seat me-1"></i>
+                                                                        Ряд {{ $booking->seat->row_number ?? '?' }}, Место {{ $booking->seat->seat_number ?? '?' }}
+                                                                    </div>
+                                                                    @if($booking->payment && $booking->payment->amount)
+                                                                        <div class="booking-info">
+                                                                            <i class="bi bi-currency-ruble me-1"></i>
+                                                                            <strong>{{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽</strong>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
                                                             </div>
+                                                            <div class="text-end ms-2">
+                                                                @if($booking->payment)
+                                                                    @if($booking->payment->payment_status === 'оплачено')
+                                                                        <span class="badge-netflix badge-success">Завершено</span>
+                                                                    @endif
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        @if($booking->payment && $booking->payment->payment_status === 'оплачено')
+                                                        <div class="d-flex justify-content-end align-items-center pt-2" style="border-top: 1px solid var(--border-secondary);">
+                                                            <a href="{{ route('user.ticket.pdf', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;" target="_blank">
+                                                                <i class="bi bi-file-earmark-pdf me-1"></i>Печать билета
+                                                            </a>
+                                                        </div>
                                                         @endif
                                                     </div>
                                                 </div>
-                                                <div class="text-end ms-2">
-                                                    @if($booking->payment)
-                                                        @if($booking->payment->payment_status === 'оплачено')
-                                                            <span class="badge-netflix badge-success">Завершено</span>
-                                                        @endif
-                                                    @endif
-                                                </div>
-                                            </div>
+                                            @endforeach
                                         </div>
                                     </div>
-                                @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                     
                     {{-- Пагинация для истории --}}
                     @if($historyBookings->hasPages())
@@ -98,5 +129,43 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Стили для стрелочки аккордеона истории в темной теме - белый цвет */
+    #historyBookingsAccordion .accordion-button::after {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Для светлой темы возвращаем стандартный цвет */
+    [data-theme="light"] #historyBookingsAccordion .accordion-button::after {
+        filter: none;
+    }
+
+    /* Изменение подсветки активного аккордеона истории с синего на красный */
+    #historyBookingsAccordion .accordion-button:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    /* Стили для кнопки печати билета */
+    .btn-ticket-print {
+        background: #0d6efd;
+        color: #ffffff;
+        border: 1px solid #0d6efd;
+        padding: 0.375rem 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-ticket-print:hover {
+        background: #0b5ed7;
+        border-color: #0b5ed7;
+        color: #ffffff;
+    }
+</style>
 @endsection
 

@@ -52,9 +52,15 @@
                             <td>{{ $user->role->role_name }}</td>
                             <td>{{ $user->login }}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ $user->id_user }}">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
+                                @if(auth()->user()->id_user != $user->id_user || $user->role_id != 1)
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ $user->id_user }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                @else
+                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Нельзя изменить роль активного администратора">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                @endif
                                 @if(auth()->user()->id_user != $user->id_user || $user->role_id != 1)
                                     <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ $user->id_user }}">
                                         <i class="bi bi-trash"></i>
@@ -68,6 +74,7 @@
                         </tr>
 
                         {{-- Модалка редактирования роли --}}
+                        @if(auth()->user()->id_user != $user->id_user || $user->role_id != 1)
                         <div class="modal fade" id="editRoleModal{{ $user->id_user }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
@@ -94,6 +101,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Модалка удаления --}}
                         @if(auth()->user()->id_user != $user->id_user || $user->role_id != 1)

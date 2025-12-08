@@ -141,6 +141,9 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:2'])->group(func
 
     // Отмена бронирования
     Route::post('/booking/{bookingId}/cancel', [UserUserController::class, 'cancelBooking'])->name('booking.cancel');
+
+    // Генерация PDF билета
+    Route::get('/ticket/{bookingId}/pdf', [\App\Http\Controllers\TicketController::class, 'generatePdf'])->name('ticket.pdf');
 });
 
 /*
