@@ -30,7 +30,7 @@ class HallController extends Controller
     {
         $validated = $request->validate([
             'hall_name' => 'required|string|max:255',
-            'type_hall' => 'required|string|max:255',
+            'type_hall' => 'required|in:большой,средний,малый',
             'description_hall' => 'nullable|string',
             'hall_photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'seats_data' => 'required|string', // JSON строка с данными о местах
@@ -107,7 +107,7 @@ class HallController extends Controller
         
         $validated = $request->validate([
             'hall_name' => 'required|string|max:255',
-            'type_hall' => 'required|string|max:255',
+            'type_hall' => 'required|in:большой,средний,малый',
             'description_hall' => 'nullable|string',
             'hall_photo' => $photoRule . '|image|mimes:jpg,jpeg,png|max:2048',
             'seats_data' => 'required|json',

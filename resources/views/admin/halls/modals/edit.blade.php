@@ -18,7 +18,12 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Тип зала <span class="text-danger">*</span></label>
-                            <input type="text" name="type_hall" class="form-control" value="{{ old('type_hall', $hall->type_hall) }}" required>
+                            <select name="type_hall" class="form-select" required>
+                                <option value="">Выберите тип зала</option>
+                                <option value="большой" {{ old('type_hall', $hall->type_hall) == 'большой' ? 'selected' : '' }}>Большой</option>
+                                <option value="средний" {{ old('type_hall', $hall->type_hall) == 'средний' ? 'selected' : '' }}>Средний</option>
+                                <option value="малый" {{ old('type_hall', $hall->type_hall) == 'малый' ? 'selected' : '' }}>Малый</option>
+                            </select>
                         </div>
                     </div>
                     <div class="row mb-4">
