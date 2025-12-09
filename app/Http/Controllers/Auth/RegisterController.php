@@ -23,9 +23,9 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'last_name' => 'required|string|max:45',
-            'first_name' => 'required|string|max:45',
-            'middle_name' => 'nullable|string|max:45',
+            'last_name' => ['required', 'string', 'max:45', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]+$/u'],
+            'first_name' => ['required', 'string', 'max:45', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]+$/u'],
+            'middle_name' => ['nullable', 'string', 'max:45', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]*$/u'],
             'phone' => 'required|string|max:18',
             'login' => 'required|string|max:45|unique:cinema_users,login',
             'password' => [
@@ -39,6 +39,9 @@ class RegisterController extends Controller
             ],
         ], 
         [
+            'last_name.regex' => 'Фамилия должна содержать только буквы (русские или английские).',
+            'first_name.regex' => 'Имя должно содержать только буквы (русские или английские).',
+            'middle_name.regex' => 'Отчество должно содержать только буквы (русские или английские).',
             'password.regex' => 'Пароль должен содержать заглавные и строчные буквы, цифры и символ.',
             'password.confirmed' => 'Пароли не совпадают.',
         ]);

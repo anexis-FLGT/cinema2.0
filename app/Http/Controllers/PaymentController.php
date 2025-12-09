@@ -80,6 +80,11 @@ class PaymentController extends Controller
             return redirect()->route('login')->with('error', 'Необходимо войти в систему');
         }
 
+        // Проверяем, что пользователь не администратор
+        if (Auth::user()->role_id == 1) {
+            return redirect()->route('sessions')->with('error', 'Администраторы не могут бронировать билеты');
+        }
+
         // Получаем данные из запроса или из сессии
         $sessionId = $request->input('session_id');
         $seatIds = $request->input('seat_ids', []);

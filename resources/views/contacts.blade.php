@@ -16,10 +16,10 @@
                     <div class="contact-info">
                         <h4 class="section-title mb-4">Наши контакты</h4>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-geo-alt-fill"></i> <strong>Адрес:</strong> г. Иркутск, ул. Ленина, 5а</li>
-                            <li><i class="bi bi-telephone-fill"></i> <strong>Телефон:</strong> 8 (3952) 34-38-95</li>
-                            <li><i class="bi bi-envelope-fill"></i> <strong>Email:</strong> info@cinemacity.ru</li>
-                            <li><i class="bi bi-clock-fill"></i> <strong>Часы работы:</strong> ежедневно с 10:00 до 23:00</li>
+                            <li><i class="bi bi-geo-alt-fill"></i> <strong>Адрес:</strong>&nbsp;г. Иркутск, ул. Ленина, 5а</li>
+                            <li><i class="bi bi-telephone-fill"></i> <strong>Телефон:</strong>&nbsp;8 (3952) 34-38-95</li>
+                            <li><i class="bi bi-envelope-fill"></i> <strong>Email:</strong>&nbsp;MaxTicket@gmail.com</li>
+                            <li><i class="bi bi-clock-fill"></i> <strong>Часы работы:</strong>&nbsp;ежедневно с 10:00 до 23:00</li>
                         </ul>
                     </div>
                 </div>

@@ -5,15 +5,47 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Models\Booking;
+use App\Models\Payment;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $moviesCount = DB::table('movies')->count();
         $sessionsCount = DB::table('cinema_sessions')->count();
         $usersCount = DB::table('cinema_users')->count();
-        $bookingsCount = DB::table('bookings')->count();
+        
+        // Активные бронирования (не отмененные)
+        $activeBookingsCount = Booking::whereHas('payment', function($query) {
+                $query->where('payment_status', '!=', 'отменено');
+            })
+            ->orWhereDoesntHave('payment')
+            ->count();
+        
+        // Отмененные бронирования
+        $cancelledBookingsCount = Booking::whereHas('payment', function($query) {
+                $query->where('payment_status', '=', 'отменено');
+            })
+            ->count();
+        
+        // Выручка за периоды (только оплаченные платежи)
+        $revenueToday = Payment::where('payment_status', 'оплачено')
+            ->whereDate('created_at', today())
+            ->sum('amount');
+        
+        $revenueWeek = Payment::where('payment_status', 'оплачено')
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('amount');
+        
+        $revenueMonth = Payment::where('payment_status', 'оплачено')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('amount');
+        
+        // Общая выручка за все время
+        $totalRevenue = Payment::where('payment_status', 'оплачено')
+            ->sum('amount');
 
         $latestMovies = DB::table('movies')
             ->orderByDesc('id_movie')
@@ -21,7 +53,10 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.dashboard', compact(
-            'moviesCount', 'sessionsCount', 'usersCount', 'bookingsCount', 'latestMovies'
+            'moviesCount', 'sessionsCount', 'usersCount', 
+            'activeBookingsCount', 'cancelledBookingsCount', 
+            'revenueToday', 'revenueWeek', 'revenueMonth', 'totalRevenue',
+            'latestMovies'
         ));
     }
 

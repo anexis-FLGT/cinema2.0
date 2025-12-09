@@ -33,7 +33,7 @@
             <table class="table align-middle">
                 <thead class="table-info">
                     <tr>
-                        <th>#</th>
+                        <th>№</th>
                         <th>Название жанра</th>
                         <th>Количество фильмов</th>
                         <th class="text-center">Действия</th>
@@ -69,7 +69,7 @@
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label class="form-label">Название жанра <span class="text-danger">*</span></label>
-                                                <input type="text" name="genre_name" class="form-control" value="{{ $genre->genre_name }}" required>
+                                                <input type="text" name="genre_name" class="form-control" value="{{ old('genre_name', $genre->genre_name) }}" required>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -146,7 +146,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Название жанра <span class="text-danger">*</span></label>
-                        <input type="text" name="genre_name" class="form-control" placeholder="Например: Драма" required>
+                        <input type="text" name="genre_name" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -158,6 +158,14 @@
     </div>
 </div>
 
+@if(session('error') && old('genre_name'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = new bootstrap.Modal(document.getElementById('addGenreModal'));
+        modal.show();
+    });
+</script>
+@endif
 @endsection
 
 

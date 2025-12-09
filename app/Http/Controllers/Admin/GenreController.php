@@ -25,11 +25,19 @@ class GenreController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'genre_name' => 'required|string|max:255|unique:genres,genre_name',
+            'genre_name' => 'required|string|max:255',
         ], [
             'genre_name.required' => 'Название жанра обязательно для заполнения.',
-            'genre_name.unique' => 'Жанр с таким названием уже существует.',
         ]);
+
+        // Проверка на дублирование жанра
+        $existingGenre = Genre::where('genre_name', $validated['genre_name'])->first();
+        
+        if ($existingGenre) {
+            return redirect()->route('admin.genres.index')
+                ->with('error', 'Жанр с таким названием уже существует.')
+                ->withInput();
+        }
 
         Genre::create([
             'genre_name' => $validated['genre_name'],
@@ -46,11 +54,21 @@ class GenreController extends Controller
         $genre = Genre::findOrFail($id);
 
         $validated = $request->validate([
-            'genre_name' => 'required|string|max:255|unique:genres,genre_name,' . $id . ',id_genre',
+            'genre_name' => 'required|string|max:255',
         ], [
             'genre_name.required' => 'Название жанра обязательно для заполнения.',
-            'genre_name.unique' => 'Жанр с таким названием уже существует.',
         ]);
+
+        // Проверка на дублирование жанра (исключая текущий)
+        $existingGenre = Genre::where('genre_name', $validated['genre_name'])
+            ->where('id_genre', '!=', $id)
+            ->first();
+        
+        if ($existingGenre) {
+            return redirect()->route('admin.genres.index')
+                ->with('error', 'Жанр с таким названием уже существует.')
+                ->withInput();
+        }
 
         $genre->update([
             'genre_name' => $validated['genre_name'],

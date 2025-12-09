@@ -41,9 +41,7 @@
                                 <div class="col-sm-4"><strong>Забронированные места:</strong></div>
                                 <div class="col-sm-8">
                                     @foreach($allBookings as $b)
-                                        <div>Ряд {{ $b->seat->row_number }}, Место {{ $b->seat->seat_number }} 
-                                            <small class="text-muted">(#{{ $b->id_booking }})</small>
-                                        </div>
+                                        <div>Ряд {{ $b->seat->row_number }}, Место {{ $b->seat->seat_number }}</div>
                                     @endforeach
                                 </div>
                             </div>

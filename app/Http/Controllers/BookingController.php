@@ -19,6 +19,11 @@ class BookingController extends Controller
      */
     public function show($sessionId)
     {
+        // Проверяем, что пользователь не администратор
+        if (Auth::check() && Auth::user()->role_id == 1) {
+            return redirect()->route('sessions')->with('error', 'Администраторы не могут бронировать билеты');
+        }
+        
         // Автоматически освобождаем истекшие бронирования
         Booking::expireOldBookings();
         
@@ -79,6 +84,11 @@ class BookingController extends Controller
      */
     public function getHallSeats(Request $request)
     {
+        // Проверяем, что пользователь не администратор
+        if (Auth::check() && Auth::user()->role_id == 1) {
+            return response()->json(['error' => 'Администраторы не могут бронировать билеты'], 403);
+        }
+        
         // Автоматически освобождаем истекшие бронирования
         Booking::expireOldBookings();
         
@@ -164,6 +174,11 @@ class BookingController extends Controller
         // Проверяем авторизацию
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Необходимо войти в систему для бронирования');
+        }
+        
+        // Проверяем, что пользователь не администратор
+        if (Auth::user()->role_id == 1) {
+            return redirect()->route('sessions')->with('error', 'Администраторы не могут бронировать билеты');
         }
         
         $validated = $request->validate([

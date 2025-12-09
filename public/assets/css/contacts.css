@@ -93,6 +93,53 @@ h2 {
     box-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
 }
 
+/* ======= Адаптация под светлую тему ======= */
+[data-theme="light"] .contacts-page {
+    background-color: var(--bg-primary, #ffffff);
+}
+
+[data-theme="light"] .contacts-card {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    color: var(--text-primary, #212529);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .contacts-card:hover {
+    box-shadow: 0 8px 40px rgba(229, 9, 20, 0.2);
+}
+
+[data-theme="light"] h2 {
+    color: var(--text-primary, #212529);
+}
+
+[data-theme="light"] .section-title {
+    color: var(--text-primary, #212529);
+    border-left-color: #e50914;
+}
+
+[data-theme="light"] .contact-info li {
+    color: var(--text-secondary, #6c757d);
+}
+
+[data-theme="light"] .contact-info li:hover {
+    color: var(--text-primary, #212529);
+}
+
+[data-theme="light"] .contact-info i {
+    color: #e50914;
+}
+
+[data-theme="light"] .social-btn {
+    background-color: #ffffff;
+    border-color: #e50914;
+    color: var(--text-primary, #212529);
+}
+
+[data-theme="light"] .social-btn:hover {
+    background-color: #e50914;
+    color: #ffffff;
+}
+
 /* ======= Адаптив ======= */
 @media (max-width: 768px) {
     .contacts-card {

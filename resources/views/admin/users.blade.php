@@ -33,7 +33,7 @@
             <table class="table align-middle">
                 <thead class="table-info">
                     <tr>
-                        <th>#</th>
+                        <th>№</th>
                         <th>Фамилия</th>
                         <th>Имя</th>
                         <th>Телефон</th>
@@ -159,38 +159,39 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Фамилия</label>
-                        <input type="text" name="last_name" class="form-control" required>
+                        <label class="form-label">Фамилия <span class="text-danger">*</span></label>
+                        <input type="text" name="last_name" id="last_name" class="form-control" required pattern="[a-zA-Zа-яА-ЯёЁ\s]+" title="Только буквы (русские или английские)">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Имя</label>
-                        <input type="text" name="first_name" class="form-control" required>
+                        <label class="form-label">Имя <span class="text-danger">*</span></label>
+                        <input type="text" name="first_name" id="first_name" class="form-control" required pattern="[a-zA-Zа-яА-ЯёЁ\s]+" title="Только буквы (русские или английские)">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Отчество</label>
-                        <input type="text" name="middle_name" class="form-control">
+                        <input type="text" name="middle_name" id="middle_name" class="form-control" pattern="[a-zA-Zа-яА-ЯёЁ\s]*" title="Только буквы (русские или английские)">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Телефон</label>
-                        <input type="text" name="phone" id="phone" class="form-control" placeholder="+7 (___) ___-__-__">
+                        <label class="form-label">Телефон <span class="text-danger">*</span></label>
+                        <input type="text" name="phone" id="phone" class="form-control" placeholder="+7 (___) ___-__-__" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Логин</label>
+                        <label class="form-label">Логин <span class="text-danger">*</span></label>
                         <input type="text" name="login" class="form-control" required>
                     </div>
                     <div class="mb-3 position-relative">
-                        <label class="form-label">Пароль</label>
+                        <label class="form-label">Пароль <span class="text-danger">*</span></label>
                         <input type="password" name="password" id="password" class="form-control" required>
                         <i class="bi bi-eye password-toggle" onclick="togglePassword('password', this)"></i>
+                        <div id="passwordRequirements" class="form-text mt-2"></div>
                     </div>
                     <div class="mb-3 position-relative">
-                        <label class="form-label">Повторите пароль</label>
+                        <label class="form-label">Повторите пароль <span class="text-danger">*</span></label>
                         <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
                         <i class="bi bi-eye password-toggle" onclick="togglePassword('password_confirmation', this)"></i>
                         <div class="invalid-feedback" id="passwordMismatch">Пароли не совпадают.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Роль</label>
+                        <label class="form-label">Роль <span class="text-danger">*</span></label>
                         <select name="role_id" class="form-select" required>
                             @foreach($roles as $role)
                                 @if($role->role_name != 'Гость')
@@ -224,6 +225,26 @@
 
     // === Инициализация маски телефона и проверки паролей ===
     function initUserForm() {
+        // Валидация ФИО - только буквы
+        const nameFields = ['last_name', 'first_name', 'middle_name'];
+        nameFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && !field.dataset.nameValidationAdded) {
+                field.dataset.nameValidationAdded = 'true';
+                field.addEventListener('input', function(e) {
+                    // Удаляем все символы, кроме букв и пробелов
+                    this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
+                });
+                // Блокируем вставку недопустимых символов
+                field.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const cleaned = paste.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
+                    this.value = cleaned;
+                });
+            }
+        });
+
         // Маска телефона
         const phoneInput = document.getElementById('phone');
         if (phoneInput && !phoneInput.dataset.maskInitialized) {
@@ -242,15 +263,37 @@
             });
         }
 
-        // Проверка совпадения паролей
+        // Проверка совпадения паролей и надежности
         const password = document.getElementById('password');
         const passwordConfirmation = document.getElementById('password_confirmation');
         const passwordMismatch = document.getElementById('passwordMismatch');
+        const passwordRequirements = document.getElementById('passwordRequirements');
 
         if (password && passwordConfirmation && passwordMismatch) {
             // Сбрасываем состояние при открытии модалки
             passwordMismatch.style.display = 'none';
             passwordConfirmation.classList.remove('is-invalid');
+
+            // Проверка надежности пароля
+            if (password && passwordRequirements) {
+                password.addEventListener('input', function() {
+                    const value = password.value;
+                    const minLength = value.length >= 8;
+                    const hasUpper = /[A-ZА-Я]/.test(value);
+                    const hasLower = /[a-zа-я]/.test(value);
+                    const hasNumber = /\d/.test(value);
+                    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+                    const valid = minLength && hasUpper && hasLower && hasNumber && hasSymbol;
+
+                    passwordRequirements.innerHTML = value ? `
+                        <span style="color: ${valid ? 'limegreen' : '#ff9800'};">
+                            ${valid 
+                                ? 'Пароль надёжный!' 
+                                : 'Минимум 8 символов, заглавные, строчные, цифры и символы.'}
+                        </span>
+                    ` : '';
+                });
+            }
 
             // Функция проверки паролей
             function checkPasswords() {

@@ -99,16 +99,8 @@
                                                                     @endif
                                                                 @endif
                                                             </div>
-                                                        </div>
-
-                                                        @if($booking->payment && $booking->payment->payment_status === 'оплачено')
-                                                        <div class="d-flex justify-content-end align-items-center pt-2" style="border-top: 1px solid var(--border-secondary);">
-                                                            <a href="{{ route('user.ticket.pdf', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;" target="_blank">
-                                                                <i class="bi bi-file-earmark-pdf me-1"></i>Печать билета
-                                                            </a>
-                                                        </div>
-                                                        @endif
-                                                    </div>
+                                                         </div>
+                                                     </div>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -145,26 +137,6 @@
     #historyBookingsAccordion .accordion-button:focus {
         border-color: #dc3545 !important;
         box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
-    }
-
-    /* Стили для кнопки печати билета */
-    .btn-ticket-print {
-        background: #0d6efd;
-        color: #ffffff;
-        border: 1px solid #0d6efd;
-        padding: 0.375rem 0.75rem;
-        font-weight: 600;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .btn-ticket-print:hover {
-        background: #0b5ed7;
-        border-color: #0b5ed7;
-        color: #ffffff;
     }
 </style>
 @endsection

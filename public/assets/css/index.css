@@ -331,6 +331,17 @@ body {
     border-color: var(--primary-color, #dc3545);
 }
 
+/* Темная обводка для радиокнопок в светлой теме */
+[data-theme="light"] .sort-options .form-check-input {
+    border-color: #212529 !important;
+    border-width: 2px;
+}
+
+[data-theme="light"] .sort-options .form-check-input:checked {
+    background-color: var(--primary-color, #dc3545);
+    border-color: var(--primary-color, #dc3545) !important;
+}
+
 .sort-options .form-check-label {
     color: #ffffff;
     cursor: pointer;

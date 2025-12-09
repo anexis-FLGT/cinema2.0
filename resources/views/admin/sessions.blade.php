@@ -33,7 +33,7 @@
             <table class="table align-middle">
                 <thead class="table-success">
                     <tr>
-                        <th>#</th>
+                        <th>№</th>
                         <th>Фильм</th>
                         <th>Дата и время</th>
                         <th>Зал</th>
@@ -93,7 +93,7 @@
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Дата и время</label>
-                                                <input type="datetime-local" name="date_time_session" class="form-control" 
+                                                <input type="datetime-local" name="date_time_session" class="form-control session-datetime-input" 
                                                        value="{{ \Carbon\Carbon::parse($session->date_time_session)->format('Y-m-d\TH:i') }}" required>
                                             </div>
                                         </div>
@@ -142,7 +142,9 @@
                         <select name="movie_id" class="form-select" required>
                             <option value="">Выберите фильм</option>
                             @foreach($movies as $movie)
-                                <option value="{{ $movie->id_movie }}">{{ $movie->movie_title }}</option>
+                                <option value="{{ $movie->id_movie }}" {{ old('movie_id') == $movie->id_movie ? 'selected' : '' }}>
+                                    {{ $movie->movie_title }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -151,13 +153,18 @@
                         <select name="hall_id" class="form-select" required>
                             <option value="">Выберите зал</option>
                             @foreach($halls as $hall)
-                                <option value="{{ $hall->id_hall }}">{{ $hall->hall_name }} ({{ $hall->type_hall }})</option>
+                                <option value="{{ $hall->id_hall }}" {{ old('hall_id') == $hall->id_hall ? 'selected' : '' }}>
+                                    {{ $hall->hall_name }} ({{ $hall->type_hall }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Дата и время</label>
-                        <input type="datetime-local" name="date_time_session" class="form-control" required>
+                        <input type="datetime-local" name="date_time_session" class="form-control session-datetime-input" 
+                               value="{{ old('date_time_session') }}" 
+                               min="{{ \Carbon\Carbon::now()->format('Y-m-d\TH:i') }}" 
+                               required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -169,4 +176,30 @@
     </div>
 </div>
 
+@if(session('error') && old('movie_id'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = new bootstrap.Modal(document.getElementById('addSessionModal'));
+        modal.show();
+    });
+</script>
+@endif
+
+<style>
+    /* Стили для темной темы в модалках сеансов */
+    [data-theme="dark"] #addSessionModal .btn-close,
+    [data-theme="dark"] .modal[id^="editSessionModal"] .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    /* Белый цвет кнопки календаря справа в темной теме */
+    [data-theme="dark"] .session-datetime-input::-webkit-calendar-picker-indicator {
+        filter: brightness(0) invert(1);
+        cursor: pointer;
+    }
+    
+    [data-theme="dark"] .session-datetime-input::-webkit-datetime-edit {
+        color: #ffffff;
+    }
+</style>
 @endsection

@@ -1,7 +1,7 @@
 <table class="table table-dark table-striped">
     <thead>
         <tr>
-            <th>#</th>
+            <th>№</th>
             <th>ФИО / Логин</th>
             <th>Телефон</th>
             <th>Роль</th>

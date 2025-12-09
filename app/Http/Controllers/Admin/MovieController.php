@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Movie;
 use App\Models\Genre;
+use App\Models\Session;
+use App\Models\Booking;
+use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 
 class MovieController extends Controller
 {
@@ -41,7 +45,7 @@ class MovieController extends Controller
             'director' => 'required|string|max:255',
             'producer' => 'required|string|max:255',
             'poster' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'baner' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'baner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'genres' => 'required|array|min:1',
             'genres.*' => 'exists:genres,id_genre'
         ]);
@@ -65,6 +69,22 @@ class MovieController extends Controller
             $description = preg_replace('/^\s+/m', '', $description);
             // Нормализуем множественные пробелы
             $description = preg_replace('/[ \t]+/', ' ', $description);
+        }
+
+        // Проверка на полностью одинаковый фильм
+        $existingMovie = Movie::where('movie_title', $validated['movie_title'])
+            ->where('duration', $validated['duration'])
+            ->where('release_year', $validated['release_year'])
+            ->where('age_limit', $validated['age_limit'])
+            ->where('director', $validated['director'])
+            ->where('producer', $validated['producer'])
+            ->where('description', $description)
+            ->first();
+
+        if ($existingMovie) {
+            return redirect()->route('admin.movies.index')
+                ->with('error', 'Фильм с такими же данными уже существует! Название: ' . $existingMovie->movie_title . '.')
+                ->withInput();
         }
 
         // Создание фильма
@@ -144,6 +164,23 @@ class MovieController extends Controller
             $description = preg_replace('/[ \t]+/', ' ', $description);
         }
 
+        // Проверка на полностью одинаковый фильм (исключая текущий)
+        $existingMovie = Movie::where('movie_title', $validated['movie_title'])
+            ->where('duration', $validated['duration'])
+            ->where('release_year', $validated['release_year'])
+            ->where('age_limit', $validated['age_limit'])
+            ->where('director', $validated['director'])
+            ->where('producer', $validated['producer'])
+            ->where('description', $description)
+            ->where('id_movie', '!=', $id)
+            ->first();
+
+        if ($existingMovie) {
+            return redirect()->route('admin.movies.index')
+                ->with('error', 'Фильм с такими же данными уже существует! Название: ' . $existingMovie->movie_title . '.')
+                ->withInput();
+        }
+
         // Обновление данных фильма
         $movie->update([
             'movie_title' => $validated['movie_title'],
@@ -173,14 +210,32 @@ class MovieController extends Controller
             ->where('date_time_session', '>', now())
             ->count();
 
-        // Удаляем связи с жанрами
-        $movie->genres()->detach();
+        DB::transaction(function () use ($movie) {
+            // Получаем все сеансы фильма
+            $sessionIds = $movie->sessions()->pluck('id_session');
+            
+            if ($sessionIds->isNotEmpty()) {
+                // Получаем все бронирования этих сеансов
+                $bookingIds = Booking::whereIn('session_id', $sessionIds)->pluck('id_booking');
+                
+                // Удаляем платежи, связанные с этими бронированиями
+                if ($bookingIds->isNotEmpty()) {
+                    Payment::whereIn('booking_id', $bookingIds)->delete();
+                }
+                
+                // Удаляем бронирования
+                Booking::whereIn('session_id', $sessionIds)->delete();
+            }
+            
+            // Удаляем все сеансы фильма
+            $movie->sessions()->delete();
 
-        // Удаляем все сеансы фильма (включая активные)
-        $movie->sessions()->delete();
+            // Удаляем связи с жанрами
+            $movie->genres()->detach();
 
-        // Удаляем фильм
-        $movie->delete();
+            // Удаляем фильм
+            $movie->delete();
+        });
 
         $message = 'Фильм удалён.';
         if ($activeSessionsCount > 0) {

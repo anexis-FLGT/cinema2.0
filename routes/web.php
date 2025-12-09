@@ -119,6 +119,24 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:1'])->group(fu
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
     Route::put('/genres/{id}', [GenreController::class, 'update'])->name('genres.update');
     Route::delete('/genres/{id}', [GenreController::class, 'destroy'])->name('genres.destroy');
+
+    // Раздел отчетов
+    Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/revenue', [\App\Http\Controllers\Admin\ReportController::class, 'revenue'])->name('reports.revenue');
+    Route::get('/reports/attendance', [\App\Http\Controllers\Admin\ReportController::class, 'attendance'])->name('reports.attendance');
+    Route::get('/reports/movies', [\App\Http\Controllers\Admin\ReportController::class, 'movies'])->name('reports.movies');
+    
+    // Экспорт отчетов в PDF
+    Route::get('/reports/revenue/pdf', [\App\Http\Controllers\Admin\ReportController::class, 'revenuePdf'])->name('reports.revenue.pdf');
+    Route::get('/reports/attendance/pdf', [\App\Http\Controllers\Admin\ReportController::class, 'attendancePdf'])->name('reports.attendance.pdf');
+    Route::get('/reports/movies/pdf', [\App\Http\Controllers\Admin\ReportController::class, 'moviesPdf'])->name('reports.movies.pdf');
+
+    // Раздел залов (CRUD)
+    Route::get('/halls', [\App\Http\Controllers\Admin\HallController::class, 'index'])->name('halls.index');
+    Route::post('/halls', [\App\Http\Controllers\Admin\HallController::class, 'store'])->name('halls.store');
+    Route::put('/halls/{id}', [\App\Http\Controllers\Admin\HallController::class, 'update'])->name('halls.update');
+    Route::delete('/halls/{id}', [\App\Http\Controllers\Admin\HallController::class, 'destroy'])->name('halls.destroy');
+    Route::get('/halls/{id}/seats', [\App\Http\Controllers\Admin\HallController::class, 'getSeats'])->name('halls.getSeats');
 });
 
 /*

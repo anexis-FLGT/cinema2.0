@@ -79,7 +79,8 @@
                         <input type="date" 
                                name="show_date" 
                                class="form-control form-control-sm" 
-                               value="{{ request('show_date') }}">
+                               value="{{ request('show_date') }}"
+                               min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
                     </div>
 
                     {{-- Сортировка (радио-кнопки) --}}

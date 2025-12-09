@@ -29,18 +29,18 @@
                 <div class="row g-2">
                     <div class="col-md-6">
                         <label class="form-label">Фамилия</label>
-                        <input type="text" name="last_name" class="form-control" required>
+                        <input type="text" name="last_name" id="last_name" class="form-control" required pattern="[a-zA-Zа-яА-ЯёЁ\s]+" title="Только буквы (русские или английские)">
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Имя</label>
-                        <input type="text" name="first_name" class="form-control" required>
+                        <input type="text" name="first_name" id="first_name" class="form-control" required pattern="[a-zA-Zа-яА-ЯёЁ\s]+" title="Только буквы (русские или английские)">
                     </div>
                 </div>
 
                 <div class="mb-3 mt-3">
                     <label class="form-label">Отчество</label>
-                    <input type="text" name="middle_name" class="form-control">
+                    <input type="text" name="middle_name" id="middle_name" class="form-control" pattern="[a-zA-Zа-яА-ЯёЁ\s]*" title="Только буквы (русские или английские)">
                 </div>
 
                 <div class="mb-3">
@@ -106,6 +106,25 @@
         const phoneInput = document.getElementById('phone');
 
         mismatch.style.display = 'none';
+
+        // Валидация ФИО - только буквы
+        const nameFields = ['last_name', 'first_name', 'middle_name'];
+        nameFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', function(e) {
+                    // Удаляем все символы, кроме букв и пробелов
+                    this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
+                });
+                // Блокируем вставку недопустимых символов
+                field.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const cleaned = paste.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
+                    this.value = cleaned;
+                });
+            }
+        });
 
         form.addEventListener('submit', function(e) {
             if (password.value !== confirm.value) {

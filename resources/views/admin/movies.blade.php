@@ -32,7 +32,7 @@
             <table class="table align-middle">
                 <thead class="table-primary">
                     <tr>
-                        <th>#</th>
+                        <th>№</th>
                         <th>Название</th>
                         <th>Длительность</th>
                         <th>Возраст</th>
@@ -278,8 +278,8 @@
               <input type="file" name="poster" class="form-control" accept="image/*" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Баннер <span class="text-danger">*</span></label>
-              <input type="file" name="baner" class="form-control" accept="image/*" required>
+              <label class="form-label">Баннер</label>
+              <input type="file" name="baner" class="form-control" accept="image/*">
             </div>
           </div>
         </div>
@@ -456,5 +456,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<style>
+    /* Стили для темной темы в модалках фильмов */
+    [data-theme="dark"] #addMovieModal .btn-close,
+    [data-theme="dark"] .modal[id^="editMovieModal"] .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    /* Белый цвет плейсхолдера для длительности в темной теме */
+    [data-theme="dark"] #addMovieModal input[name="duration"]::placeholder,
+    [data-theme="dark"] .modal[id^="editMovieModal"] input[name="duration"]::placeholder,
+    [data-theme="dark"] #addMovieModal #duration-input::placeholder,
+    [data-theme="dark"] .modal[id^="editMovieModal"] .duration-input::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    /* Белый цвет текста в поле длительности в темной теме */
+    [data-theme="dark"] #addMovieModal input[name="duration"],
+    [data-theme="dark"] .modal[id^="editMovieModal"] input[name="duration"],
+    [data-theme="dark"] #addMovieModal #duration-input,
+    [data-theme="dark"] .modal[id^="editMovieModal"] .duration-input {
+        color: #ffffff !important;
+    }
+</style>
 
 @endsection
