@@ -216,7 +216,7 @@
             <div class="ticket-row">
                 <div class="ticket-label">Дата бронирования:</div>
                 <div class="ticket-value">
-                    {{ \Carbon\Carbon::parse($booking->created_ad)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}
+                    {{ \Carbon\Carbon::parse($booking->created_ad)->setTimezone('Asia/Irkutsk')->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}
                 </div>
             </div>
         </div>

@@ -51,11 +51,55 @@
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editSessionModal{{ $session->id_session }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="{{ route('admin.sessions.destroy', $session->id_session) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Вы уверены, что хотите удалить этот сеанс?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                </form>
+                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSessionModal{{ $session->id_session }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                
+                                {{-- Модалка удаления сеанса --}}
+                                <div class="modal fade" id="deleteSessionModal{{ $session->id_session }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <form action="{{ route('admin.sessions.destroy', $session->id_session) }}" method="POST" id="deleteSessionForm{{ $session->id_session }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title text-danger">Удалить сеанс?</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Вы уверены, что хотите удалить сеанс фильма <strong>{{ $session->movie->movie_title ?? '—' }}</strong>?</p>
+                                                    <p class="mb-0"><strong>Дата и время:</strong> {{ \Carbon\Carbon::parse($session->date_time_session)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+                                                    <p class="mb-0"><strong>Зал:</strong> {{ $session->hall->hall_name ?? '—' }}</p>
+                                                    @php
+                                                        $activeBookingsCount = \App\Models\Booking::where('session_id', $session->id_session)
+                                                            ->where(function($query) {
+                                                                $query->whereHas('payment', function($q) {
+                                                                    $q->where('payment_status', '!=', 'отменено');
+                                                                })
+                                                                ->orWhereDoesntHave('payment');
+                                                            })
+                                                            ->count();
+                                                    @endphp
+                                                    @if($activeBookingsCount > 0)
+                                                        <div class="alert alert-danger mt-3">
+                                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                                            <strong>Невозможно удалить сеанс!</strong>
+                                                            <br>На данный сеанс есть <strong>{{ $activeBookingsCount }}</strong> {{ $activeBookingsCount == 1 ? 'активное бронирование' : ($activeBookingsCount < 5 ? 'активных бронирования' : 'активных бронирований') }}.
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="modal-footer">
+                                                    @if($activeBookingsCount > 0)
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                                                    @else
+                                                        <button type="submit" class="btn btn-danger">Удалить</button>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                    @endif
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
 
@@ -188,7 +232,8 @@
 <style>
     /* Стили для темной темы в модалках сеансов */
     [data-theme="dark"] #addSessionModal .btn-close,
-    [data-theme="dark"] .modal[id^="editSessionModal"] .btn-close {
+    [data-theme="dark"] .modal[id^="editSessionModal"] .btn-close,
+    [data-theme="dark"] .modal[id^="deleteSessionModal"] .btn-close {
         filter: brightness(0) invert(1);
     }
     
