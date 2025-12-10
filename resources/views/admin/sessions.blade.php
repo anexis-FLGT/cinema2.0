@@ -55,7 +55,7 @@
                                     <i class="bi bi-trash"></i>
                                 </button>
                                 
-                                {{-- Модалка удаления сеанса --}}
+                                {{-- Модалка архивации сеанса --}}
                                 <div class="modal fade" id="deleteSessionModal{{ $session->id_session }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
@@ -63,36 +63,57 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title text-danger">Удалить сеанс?</h5>
+                                                    <h5 class="modal-title text-warning">Архивировать сеанс?</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <p>Вы уверены, что хотите удалить сеанс фильма <strong>{{ $session->movie->movie_title ?? '—' }}</strong>?</p>
+                                                    <p>Вы уверены, что хотите архивировать сеанс фильма <strong>{{ $session->movie->movie_title ?? '—' }}</strong>?</p>
                                                     <p class="mb-0"><strong>Дата и время:</strong> {{ \Carbon\Carbon::parse($session->date_time_session)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
                                                     <p class="mb-0"><strong>Зал:</strong> {{ $session->hall->hall_name ?? '—' }}</p>
                                                     @php
-                                                        $activeBookingsCount = \App\Models\Booking::where('session_id', $session->id_session)
-                                                            ->where(function($query) {
-                                                                $query->whereHas('payment', function($q) {
-                                                                    $q->where('payment_status', '!=', 'отменено');
+                                                        $isPastSession = \Carbon\Carbon::parse($session->date_time_session) < now();
+                                                        $activeBookingsCount = 0;
+                                                        
+                                                        if (!$isPastSession) {
+                                                            $activeBookingsCount = \App\Models\Booking::where('session_id', $session->id_session)
+                                                                ->where(function($query) {
+                                                                    $query->whereHas('payment', function($q) {
+                                                                        $q->where('payment_status', '!=', 'отменено');
+                                                                    })
+                                                                    ->orWhereDoesntHave('payment');
                                                                 })
-                                                                ->orWhereDoesntHave('payment');
-                                                            })
-                                                            ->count();
+                                                                ->count();
+                                                        }
                                                     @endphp
-                                                    @if($activeBookingsCount > 0)
+                                                    @if($isPastSession)
+                                                        <div class="alert alert-info mt-3">
+                                                            <i class="bi bi-info-circle me-2"></i>
+                                                            <strong>Прошедший сеанс.</strong> Бронирования будут сохранены в истории пользователей.
+                                                        </div>
+                                                    @elseif($activeBookingsCount > 0)
                                                         <div class="alert alert-danger mt-3">
                                                             <i class="bi bi-exclamation-triangle me-2"></i>
-                                                            <strong>Невозможно удалить сеанс!</strong>
+                                                            <strong>Невозможно архивировать сеанс!</strong>
                                                             <br>На данный сеанс есть <strong>{{ $activeBookingsCount }}</strong> {{ $activeBookingsCount == 1 ? 'активное бронирование' : ($activeBookingsCount < 5 ? 'активных бронирования' : 'активных бронирований') }}.
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-warning mt-3">
+                                                            <i class="bi bi-exclamation-circle me-2"></i>
+                                                            <strong>Внимание!</strong> Сеанс будет скрыт из списка, но бронирования останутся в истории пользователей.
                                                         </div>
                                                     @endif
                                                 </div>
                                                 <div class="modal-footer">
-                                                    @if($activeBookingsCount > 0)
+                                                    @if($isPastSession)
+                                                        {{-- Для прошедших сеансов всегда можно архивировать --}}
+                                                        <button type="submit" class="btn btn-warning">Архивировать</button>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                    @elseif($activeBookingsCount > 0)
+                                                        {{-- Для будущих сеансов с активными бронированиями нельзя архивировать --}}
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                                                     @else
-                                                        <button type="submit" class="btn btn-danger">Удалить</button>
+                                                        {{-- Для будущих сеансов без активных бронирований можно архивировать --}}
+                                                        <button type="submit" class="btn btn-warning">Архивировать</button>
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                                                     @endif
                                                 </div>

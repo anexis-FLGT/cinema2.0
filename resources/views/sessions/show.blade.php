@@ -89,15 +89,32 @@
                                     </h6>
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach($dateSessions as $session)
-                                            <a href="{{ route('booking.show', $session->id_session) }}" 
-                                               class="btn btn-outline-light session-time-btn"
-                                               title="Зал: {{ $session->hall->hall_name ?? 'Не указан' }}">
-                                                <i class="bi bi-clock me-1"></i>
-                                                {{ $session->date_time_session->format('H:i') }}
-                                                @if($session->hall)
-                                                    <small class="d-block mt-1" style="color: var(--text-primary);">{{ $session->hall->hall_name }}</small>
-                                                @endif
-                                            </a>
+                                            @auth
+                                                <a href="{{ route('booking.show', $session->id_session) }}" 
+                                                   class="btn btn-outline-light session-time-btn"
+                                                   title="Зал: {{ $session->hall->hall_name ?? 'Не указан' }}">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    {{ $session->date_time_session->format('H:i') }}
+                                                    @if($session->hall)
+                                                        <small class="d-block mt-1" style="color: var(--text-primary);">{{ $session->hall->hall_name }}</small>
+                                                    @endif
+                                                </a>
+                                            @else
+                                                <button type="button" 
+                                                        class="btn btn-outline-light session-time-btn"
+                                                        title="Для бронирования необходимо войти в систему"
+                                                        onclick="window.location.href='{{ route('login') }}'"
+                                                        style="opacity: 0.6; cursor: pointer;">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    {{ $session->date_time_session->format('H:i') }}
+                                                    @if($session->hall)
+                                                        <small class="d-block mt-1" style="color: var(--text-primary);">{{ $session->hall->hall_name }}</small>
+                                                    @endif
+                                                    <small class="d-block mt-1 text-warning">
+                                                        <i class="bi bi-lock me-1"></i>Войти
+                                                    </small>
+                                                </button>
+                                            @endauth
                                         @endforeach
                                     </div>
                                 </div>

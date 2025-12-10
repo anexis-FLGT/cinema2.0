@@ -242,6 +242,7 @@
                                     <div class="position-relative">
                                         <input type="password" name="password" class="form-control" id="passwordField">
                                         <i class="bi bi-eye password-toggle" onclick="togglePassword('passwordField', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #b3b3b3;"></i>
+                                        <div id="passwordRequirements" class="form-text mt-2"></div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -346,6 +347,7 @@ if (editProfileModal) {
         }
         const passwordMismatch = document.getElementById('passwordMismatch');
         if (passwordMismatch) passwordMismatch.style.display = 'none';
+        if (passwordRequirements) passwordRequirements.innerHTML = '';
     });
 }
 
@@ -378,6 +380,32 @@ if (profileForm) {
     const passwordMismatch = document.getElementById('passwordMismatch');
 
     if (password && passwordConfirmation && passwordMismatch) {
+        // Проверка надежности пароля
+        if (password && passwordRequirements) {
+            password.addEventListener('input', function() {
+                // Проверяем только если поля видны (чекбокс отмечен)
+                if (changePasswordCheckbox && changePasswordCheckbox.checked) {
+                    const value = password.value;
+                    const minLength = value.length >= 8;
+                    const hasUpper = /[A-ZА-Я]/.test(value);
+                    const hasLower = /[a-zа-я]/.test(value);
+                    const hasNumber = /\d/.test(value);
+                    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+                    const valid = minLength && hasUpper && hasLower && hasNumber && hasSymbol;
+
+                    passwordRequirements.innerHTML = value ? `
+                        <span style="color: ${valid ? 'limegreen' : '#ff9800'};">
+                            ${valid 
+                                ? 'Пароль надёжный!' 
+                                : 'Минимум 8 символов, заглавные, строчные, цифры и символы.'}
+                        </span>
+                    ` : '';
+                } else {
+                    passwordRequirements.innerHTML = '';
+                }
+            });
+        }
+
         // Функция проверки паролей
         function checkPasswords() {
             // Проверяем только если поля видны (чекбокс отмечен)
@@ -405,6 +433,23 @@ if (profileForm) {
         profileForm.addEventListener('submit', function(e) {
             // Проверяем пароли только если чекбокс отмечен
             if (changePasswordCheckbox && changePasswordCheckbox.checked) {
+                // Проверка надежности пароля
+                if (password.value) {
+                    const minLength = password.value.length >= 8;
+                    const hasUpper = /[A-ZА-Я]/.test(password.value);
+                    const hasLower = /[a-zа-я]/.test(password.value);
+                    const hasNumber = /\d/.test(password.value);
+                    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password.value);
+                    const valid = minLength && hasUpper && hasLower && hasNumber && hasSymbol;
+                    
+                    if (!valid) {
+                        e.preventDefault();
+                        alert('Пароль должен содержать минимум 8 символов, заглавные и строчные буквы, цифры и символы.');
+                        password.focus();
+                        return;
+                    }
+                }
+                
                 if (password.value && passwordConfirmation.value && password.value !== passwordConfirmation.value) {
                     e.preventDefault();
                     passwordMismatch.style.display = 'block';

@@ -19,6 +19,7 @@ class SessionController extends Controller
     public function index()
     {
         $sessions = Session::with(['movie', 'hall'])
+            ->where('is_archived', false)
             ->orderBy('date_time_session', 'asc')
             ->paginate(10);
         
@@ -45,6 +46,7 @@ class SessionController extends Controller
         
         $existingSession = Session::where('movie_id', $validated['movie_id'])
             ->where('hall_id', $validated['hall_id'])
+            ->where('is_archived', false)
             ->whereRaw("DATE_FORMAT(date_time_session, '%Y-%m-%d %H:%i') = ?", [$timeString])
             ->first();
         
@@ -85,6 +87,7 @@ class SessionController extends Controller
         
         $existingSession = Session::where('movie_id', $validated['movie_id'])
             ->where('hall_id', $validated['hall_id'])
+            ->where('is_archived', false)
             ->whereRaw("DATE_FORMAT(date_time_session, '%Y-%m-%d %H:%i') = ?", [$timeString])
             ->where('id_session', '!=', $id)
             ->first();
@@ -108,46 +111,43 @@ class SessionController extends Controller
     }
 
     /**
-     * Удаление сеанса
+     * Архивирование сеанса (вместо удаления)
      */
     public function destroy($id)
     {
         $session = Session::findOrFail($id);
 
-        // Проверяем наличие активных (не отмененных) бронирований на этот сеанс
-        $activeBookingsCount = Booking::where('session_id', $session->id_session)
-            ->where(function($query) {
-                $query->whereHas('payment', function($q) {
-                    $q->where('payment_status', '!=', 'отменено');
-                })
-                ->orWhereDoesntHave('payment');
-            })
-            ->count();
+        // Проверяем, прошел ли сеанс
+        $isPastSession = $session->date_time_session < now();
 
-        if ($activeBookingsCount > 0) {
-            return redirect()->route('admin.sessions.index')
-                ->with('error', "Невозможно удалить сеанс! На данный сеанс есть {$activeBookingsCount} " . 
-                    ($activeBookingsCount == 1 ? 'активное бронирование' : ($activeBookingsCount < 5 ? 'активных бронирования' : 'активных бронирований')) . '.');
+        if (!$isPastSession) {
+            // Для будущих сеансов проверяем наличие активных (не отмененных) бронирований
+            $activeBookingsCount = Booking::where('session_id', $session->id_session)
+                ->where(function($query) {
+                    $query->whereHas('payment', function($q) {
+                        $q->where('payment_status', '!=', 'отменено');
+                    })
+                    ->orWhereDoesntHave('payment');
+                })
+                ->count();
+
+            if ($activeBookingsCount > 0) {
+                return redirect()->route('admin.sessions.index')
+                    ->with('error', "Невозможно архивировать сеанс! На данный сеанс есть {$activeBookingsCount} " . 
+                        ($activeBookingsCount == 1 ? 'активное бронирование' : ($activeBookingsCount < 5 ? 'активных бронирования' : 'активных бронирований')) . '.');
+            }
         }
 
-        // Если активных бронирований нет, удаляем все бронирования сеанса (включая отмененные) и их платежи, затем сеанс
-        DB::transaction(function () use ($session) {
-            // Получаем все бронирования сеанса (включая отмененные)
-            $allBookingIds = Booking::where('session_id', $session->id_session)->pluck('id_booking');
+        // Архивируем сеанс (не удаляем бронирования - они остаются в истории)
+        $session->update([
+            'is_archived' => true,
+        ]);
 
-            // Удаляем все платежи, связанные с этими бронированиями
-            if ($allBookingIds->isNotEmpty()) {
-                Payment::whereIn('booking_id', $allBookingIds)->delete();
-            }
+        $message = $isPastSession 
+            ? 'Прошедший сеанс архивирован. Бронирования сохранены в истории.'
+            : 'Сеанс архивирован.';
 
-            // Удаляем все бронирования сеанса
-            Booking::where('session_id', $session->id_session)->delete();
-
-            // Удаляем сеанс
-            $session->delete();
-        });
-
-        return redirect()->route('admin.sessions.index')->with('success', 'Сеанс удалён.');
+        return redirect()->route('admin.sessions.index')->with('success', $message);
     }
 }
 

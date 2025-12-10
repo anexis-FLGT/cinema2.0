@@ -14,10 +14,12 @@ class Session extends Model
         'date_time_session',
         'movie_id',
         'hall_id',
+        'is_archived',
     ];
 
     protected $casts = [
         'date_time_session' => 'datetime',
+        'is_archived' => 'boolean',
     ];
 
     public function movie()

@@ -94,7 +94,18 @@ class UserController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'login' => 'required|string|max:50|unique:cinema_users,login,' . $user->id_user . ',id_user',
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => [
+                'nullable',
+                'confirmed',
+                'min:8',
+                'regex:/[A-ZА-Я]/', // хотя бы одна заглавная
+                'regex:/[a-zа-я]/', // хотя бы одна строчная
+                'regex:/[0-9]/', // хотя бы одна цифра
+                'regex:/[@$!%*?&.,?":{}|<>]/' // хотя бы один символ
+            ],
+        ], [
+            'password.regex' => 'Пароль должен содержать заглавные и строчные буквы, цифры и символ.',
+            'password.confirmed' => 'Пароли не совпадают.',
         ]);
 
         // Обновляем данные

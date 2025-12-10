@@ -19,8 +19,13 @@ class BookingController extends Controller
      */
     public function show($sessionId)
     {
+        // Проверяем авторизацию
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Для бронирования билетов необходимо войти в систему');
+        }
+        
         // Проверяем, что пользователь не администратор
-        if (Auth::check() && Auth::user()->role_id == 1) {
+        if (Auth::user()->role_id == 1) {
             return redirect()->route('sessions')->with('error', 'Администраторы не могут бронировать билеты');
         }
         
@@ -29,6 +34,11 @@ class BookingController extends Controller
         
         // Получаем сеанс с фильмом и залом
         $session = Session::with(['movie.genres', 'hall'])->findOrFail($sessionId);
+        
+        // Проверяем, что сеанс не архивирован
+        if ($session->is_archived) {
+            return redirect()->route('sessions')->with('error', 'Этот сеанс недоступен');
+        }
         
         // Проверяем, что сеанс еще не прошел
         if ($session->date_time_session < now()) {
@@ -95,6 +105,11 @@ class BookingController extends Controller
         $sessionId = $request->input('session_id');
         
         $session = Session::with(['movie', 'hall'])->findOrFail($sessionId);
+        
+        // Проверяем, что сеанс не архивирован
+        if ($session->is_archived) {
+            return response()->json(['error' => 'Этот сеанс недоступен'], 404);
+        }
         
         // Проверяем, что у сеанса есть привязанный зал
         if (!$session->hall_id || !$session->hall) {
@@ -189,6 +204,11 @@ class BookingController extends Controller
         
         // Получаем данные сеанса
         $session = Session::with('hall')->findOrFail($validated['session_id']);
+        
+        // Проверяем, что сеанс не архивирован
+        if ($session->is_archived) {
+            return redirect()->route('sessions')->with('error', 'Этот сеанс недоступен');
+        }
         
         // Проверяем, что у сеанса есть привязанный зал
         if (!$session->hall_id || !$session->hall) {

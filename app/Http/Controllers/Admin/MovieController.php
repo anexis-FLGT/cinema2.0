@@ -19,7 +19,8 @@ class MovieController extends Controller
     public function index()
     {
         $movies = Movie::with(['genres', 'sessions' => function($query) {
-            $query->where('date_time_session', '>', now());
+            $query->where('is_archived', false)
+                  ->where('date_time_session', '>', now());
         }])->paginate(10);
         // Получаем уникальные жанры из pivot таблицы или из таблицы genres
         // Получаем уникальные жанры (если в таблице genres есть movie_id, используем distinct)
@@ -205,8 +206,9 @@ class MovieController extends Controller
     {
         $movie = Movie::findOrFail($id);
 
-        // Проверяем наличие активных (будущих) сеансов
+        // Проверяем наличие активных (будущих) неархивированных сеансов
         $activeSessionsCount = $movie->sessions()
+            ->where('is_archived', false)
             ->where('date_time_session', '>', now())
             ->count();
 

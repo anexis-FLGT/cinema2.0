@@ -115,6 +115,11 @@ class PaymentController extends Controller
         // Получаем данные сеанса
         $session = Session::with(['movie', 'hall'])->findOrFail($validated['session_id']);
         
+        // Проверяем, что сеанс не архивирован
+        if ($session->is_archived) {
+            return redirect()->route('sessions')->with('error', 'Этот сеанс недоступен');
+        }
+        
         // Проверяем, что у сеанса есть привязанный зал
         if (!$session->hall_id || !$session->hall) {
             return back()->with('error', 'Для данного сеанса не указан зал');

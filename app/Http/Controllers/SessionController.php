@@ -17,8 +17,9 @@ class SessionController extends Controller
         // Получаем параметр фильтра по дате
         $selectedDate = $request->input('date');
         
-        // Получаем все будущие сеансы с фильмами и залами
+        // Получаем все будущие неархивированные сеансы с фильмами и залами
         $sessionsQuery = Session::with(['movie', 'hall'])
+            ->where('is_archived', false)
             ->where('date_time_session', '>=', now());
         
         // Применяем фильтр по дате, если он указан
@@ -38,14 +39,16 @@ class SessionController extends Controller
 
         // Получаем все фильмы, у которых есть сеансы
         $moviesQuery = Movie::whereHas('sessions', function($query) use ($selectedDate) {
-            $query->where('date_time_session', '>=', now());
+            $query->where('is_archived', false)
+                  ->where('date_time_session', '>=', now());
             if ($selectedDate) {
                 $query->whereDate('date_time_session', $selectedDate);
             }
         });
         
         $movies = $moviesQuery->with(['genres', 'sessions' => function($query) use ($selectedDate) {
-            $query->where('date_time_session', '>=', now());
+            $query->where('is_archived', false)
+                  ->where('date_time_session', '>=', now());
             if ($selectedDate) {
                 $query->whereDate('date_time_session', $selectedDate);
             }
@@ -59,7 +62,8 @@ class SessionController extends Controller
         }
 
         // Получаем список всех доступных дат для фильтра
-        $availableDates = Session::where('date_time_session', '>=', now())
+        $availableDates = Session::where('is_archived', false)
+            ->where('date_time_session', '>=', now())
             ->selectRaw('DATE(date_time_session) as date')
             ->distinct()
             ->orderBy('date', 'asc')
