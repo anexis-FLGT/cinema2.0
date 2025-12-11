@@ -25,6 +25,9 @@
         <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
             <i class="bi bi-bar-chart-line me-2"></i> Отчёты
         </a>
+        <a href="{{ route('admin.history.index') }}" class="nav-link {{ request()->routeIs('admin.history*') ? 'active' : '' }}">
+            <i class="bi bi-clock-history me-2"></i> История операций
+        </a>
     </nav>
 
 </aside>

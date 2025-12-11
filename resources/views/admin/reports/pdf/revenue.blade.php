@@ -159,9 +159,7 @@
     </table>
     @endif
 
-    <div class="footer">
-        <p>Сгенерировано системой MaxTicket</p>
-    </div>
+
 </body>
 </html>
 

@@ -28,6 +28,40 @@
             </button>
         </div>
 
+        {{-- Форма поиска и фильтрации --}}
+        <form method="GET" action="{{ route('admin.movies.index') }}" class="mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Поиск по названию</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Введите название фильма..." value="{{ request('search') }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Фильтр по жанру</label>
+                    <select name="genre_id" class="form-select">
+                        <option value="">Все жанры</option>
+                        @foreach($genres as $genre)
+                            <option value="{{ $genre->id_genre }}" @if(request('genre_id') == $genre->id_genre) selected @endif>{{ $genre->genre_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary text-white w-100">
+                        <i class="bi bi-funnel me-1"></i> Применить
+                    </button>
+                </div>
+                @if(request('search') || request('genre_id'))
+                    <div class="col-12">
+                        <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle me-1"></i> Сбросить фильтры
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </form>
+
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead class="table-primary">
@@ -203,13 +237,9 @@
         {{-- Пагинация --}}
         @if($movies->hasPages())
             <div class="mt-4">
-                {{ $movies->links('pagination::bootstrap-4') }}
+                {{ $movies->appends(request()->query())->links('pagination::bootstrap-4') }}
             </div>
         @endif
-    </div>
-</div>
-            {{ $movies->links() }}
-        </div>
     </div>
 </div>
 
@@ -227,32 +257,50 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Название <span class="text-danger">*</span></label>
-              <input type="text" name="movie_title" class="form-control" required>
+              <input type="text" name="movie_title" class="form-control @error('movie_title') is-invalid @enderror" value="{{ old('movie_title') }}" required>
+              @error('movie_title')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-6">
               <label class="form-label">Режиссер <span class="text-danger">*</span></label>
-              <input type="text" name="director" class="form-control" required>
+              <input type="text" name="director" class="form-control @error('director') is-invalid @enderror" value="{{ old('director') }}" required>
+              @error('director')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-6">
               <label class="form-label">Продюсер <span class="text-danger">*</span></label>
-              <input type="text" name="producer" class="form-control" required>
+              <input type="text" name="producer" class="form-control @error('producer') is-invalid @enderror" value="{{ old('producer') }}" required>
+              @error('producer')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-4">
               <label class="form-label">Длительность <span class="text-danger">*</span></label>
-              <input type="text" name="duration" id="duration-input" class="form-control" placeholder="1 ч. 50 мин." required>
+              <input type="text" name="duration" id="duration-input" class="form-control @error('duration') is-invalid @enderror" placeholder="1 ч. 50 мин." value="{{ old('duration') }}" required>
+              @error('duration')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
               <small class="text-muted">Формат: X ч. Y мин.</small>
             </div>
             <div class="col-md-4">
               <label class="form-label">Год выпуска <span class="text-danger">*</span></label>
-              <input type="number" name="release_year" class="form-control" min="1900" max="{{ date('Y') }}" required>
+              <input type="number" name="release_year" class="form-control @error('release_year') is-invalid @enderror" min="1900" max="{{ date('Y') }}" value="{{ old('release_year') }}" required>
+              @error('release_year')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-4">
               <label class="form-label">Возрастное ограничение <span class="text-danger">*</span></label>
-              <select name="age_limit" class="form-select" required>
+              <select name="age_limit" class="form-select @error('age_limit') is-invalid @enderror" required>
                 @foreach(['0+','6+','12+','16+','18+'] as $age)
-                    <option value="{{ $age }}">{{ $age }}</option>
+                    <option value="{{ $age }}" @if(old('age_limit') == $age) selected @endif>{{ $age }}</option>
                 @endforeach
               </select>
+              @error('age_limit')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-12">
               <label class="form-label">Жанры <span class="text-danger">*</span></label>
@@ -267,19 +315,31 @@
                 @endforeach
               </div>
               <input type="hidden" name="genres_check" value="1">
+              @error('genres')
+                  <div class="text-danger small mt-1">{{ $message }}</div>
+              @enderror
               <small class="text-muted">Выберите хотя бы один жанр</small>
             </div>
             <div class="col-12">
               <label class="form-label">Описание</label>
-              <textarea name="description" class="form-control" rows="3"></textarea>
+              <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
+              @error('description')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-6">
               <label class="form-label">Постер <span class="text-danger">*</span></label>
-              <input type="file" name="poster" class="form-control" accept="image/*" required>
+              <input type="file" name="poster" class="form-control @error('poster') is-invalid @enderror" accept="image/jpeg,image/jpg,image/png" required>
+              @error('poster')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-6">
               <label class="form-label">Баннер</label>
-              <input type="file" name="baner" class="form-control" accept="image/*">
+              <input type="file" name="baner" class="form-control @error('baner') is-invalid @enderror" accept="image/jpeg,image/jpg,image/png">
+              @error('baner')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
           </div>
         </div>
@@ -294,6 +354,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Автоматически открываем модальное окно добавления, если есть ошибки валидации
+    @if($errors->any() && !session('edit_movie_id'))
+        const addMovieModal = new bootstrap.Modal(document.getElementById('addMovieModal'));
+        addMovieModal.show();
+    @endif
+
     // Валидация жанров - проверка, что выбран хотя бы один жанр
     // Используем делегирование событий на уровне document
     document.addEventListener('submit', function(e) {
@@ -478,6 +544,34 @@ document.addEventListener('DOMContentLoaded', function() {
     [data-theme="dark"] #addMovieModal #duration-input,
     [data-theme="dark"] .modal[id^="editMovieModal"] .duration-input {
         color: #ffffff !important;
+    }
+
+    /* Стили для поиска - адаптация под темы */
+    [data-theme="dark"] .input-group-text {
+        background-color: var(--bg-secondary) !important;
+        border-color: var(--border-color) !important;
+        color: #ffffff !important;
+    }
+    
+    [data-theme="dark"] .input-group-text i {
+        color: #ffffff !important;
+    }
+    
+    [data-theme="dark"] .input-group .form-control {
+        background-color: var(--input-bg) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    [data-theme="dark"] .input-group .form-control::placeholder {
+        color: #ffffff !important;
+        opacity: 0.7;
+    }
+    
+    [data-theme="dark"] .input-group .form-control:focus {
+        background-color: var(--input-bg) !important;
+        border-color: var(--input-focus-border) !important;
+        color: var(--text-primary) !important;
     }
 </style>
 

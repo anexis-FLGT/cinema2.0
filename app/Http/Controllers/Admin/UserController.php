@@ -13,14 +13,37 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    // Список пользователей с пагинацией
-    public function index()
+    // Список пользователей с пагинацией, поиском и фильтрацией
+    public function index(Request $request)
     {
-        $users = User::with('role')->paginate(10);
+        $query = User::with('role');
+
+        // Поиск по ФИО
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('last_name', 'like', "%{$search}%")
+                  ->orWhere('first_name', 'like', "%{$search}%")
+                  ->orWhere('middle_name', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT(last_name, ' ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ["%{$search}%"]);
+            });
+        }
+
+        // Фильтрация по роли
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->input('role_id'));
+        }
+
+        // Получаем все роли для фильтра
+        $allRoles = Role::all();
+        
         // Исключаем роль "Гость" из списка для редактирования
         $roles = Role::where('role_name', '!=', 'Гость')->get();
 
-        return view('admin.users', compact('users', 'roles'));
+        // Пагинация с сохранением параметров поиска
+        $users = $query->orderBy('id_user', 'desc')->paginate(10)->withQueryString();
+
+        return view('admin.users', compact('users', 'roles', 'allRoles'));
     }
 
     // Добавление нового пользователя
@@ -30,7 +53,7 @@ class UserController extends Controller
             'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]+$/u'],
             'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]+$/u'],
             'middle_name' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]*$/u'],
-            'phone' => 'required|string|max:18',
+            'phone' => 'required|string|max:18|unique:cinema_users,phone',
             'login' => 'required|string|max:50|unique:cinema_users,login',
             'password' => [
                 'required',
@@ -48,6 +71,8 @@ class UserController extends Controller
             'first_name.regex' => 'Имя должно содержать только буквы (русские или английские).',
             'middle_name.regex' => 'Отчество должно содержать только буквы (русские или английские).',
             'phone.required' => 'Поле "Телефон" обязательно для заполнения.',
+            'phone.unique' => 'Пользователь с таким номером телефона уже существует.',
+            'login.unique' => 'Пользователь с таким логином уже существует.',
             'password.regex' => 'Пароль должен содержать заглавные и строчные буквы, цифры и символ.',
             'password.confirmed' => 'Пароли не совпадают.',
         ]);
@@ -65,25 +90,110 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Пользователь добавлен.');
     }
 
-    // Обновление роли пользователя
+    // Обновление пользователя
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        $isActiveAdmin = auth()->user()->id_user == $user->id_user && $user->role_id == 1;
 
-        // Проверка: активный администратор не может изменить свою роль
-        if (auth()->user()->id_user == $user->id_user && $user->role_id == 1) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'Нельзя изменить роль активного администратора.');
+        // Правила валидации
+        $rules = [
+            'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]+$/u'],
+            'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]+$/u'],
+            'middle_name' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Zа-яА-ЯёЁ\s]*$/u'],
+            'phone' => ['required', 'string', 'max:18'],
+            'login' => ['required', 'string', 'max:50'],
+        ];
+
+        // Для активного администратора роль не изменяется
+        if (!$isActiveAdmin) {
+            $rules['role_id'] = 'required|exists:roles,id_role';
         }
 
-        $validated = $request->validate([
-            'role_id' => 'required|exists:roles,id_role',
-        ]);
+        // Если пароль указан, добавляем правила валидации для пароля
+        if ($request->filled('password')) {
+            $rules['password'] = [
+                'required',
+                'confirmed',
+                'min:8',
+                'regex:/[A-ZА-Я]/',
+                'regex:/[a-zа-я]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*?&.,?":{}|<>]/'
+            ];
+        }
 
-        $user->role_id = $validated['role_id'];
+        // Проверка уникальности телефона и логина только если они изменились
+        $phone = trim($request->input('phone'));
+        $login = trim($request->input('login'));
+        $currentPhone = trim($user->phone ?? '');
+        $currentLogin = trim($user->login ?? '');
+        
+        // Проверяем телефон, если он изменился
+        if ($phone !== $currentPhone) {
+            $existingPhone = User::where('phone', $phone)
+                ->where('id_user', '!=', (int)$id)
+                ->first();
+            if ($existingPhone) {
+                session()->flash('edit_user_id', $id);
+                return redirect()->route('admin.users.index')
+                    ->withErrors(['phone' => 'Пользователь с таким номером телефона уже существует.'])
+                    ->withInput();
+            }
+        }
+        
+        // Проверяем логин, если он изменился
+        if ($login !== $currentLogin) {
+            $existingLogin = User::where('login', $login)
+                ->where('id_user', '!=', (int)$id)
+                ->first();
+            if ($existingLogin) {
+                session()->flash('edit_user_id', $id);
+                return redirect()->route('admin.users.index')
+                    ->withErrors(['login' => 'Пользователь с таким логином уже существует.'])
+                    ->withInput();
+            }
+        }
+
+        try {
+            $validated = $request->validate($rules, [
+                'last_name.regex' => 'Фамилия должна содержать только буквы (русские или английские).',
+                'first_name.regex' => 'Имя должно содержать только буквы (русские или английские).',
+                'middle_name.regex' => 'Отчество должно содержать только буквы (русские или английские).',
+                'phone.required' => 'Поле "Телефон" обязательно для заполнения.',
+                'phone.unique' => 'Пользователь с таким номером телефона уже существует.',
+                'login.unique' => 'Пользователь с таким логином уже существует.',
+                'role_id.required' => 'Поле "Роль" обязательно для заполнения.',
+                'role_id.exists' => 'Выбранная роль не существует.',
+                'password.regex' => 'Пароль должен содержать заглавные и строчные буквы, цифры и символ.',
+                'password.confirmed' => 'Пароли не совпадают.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Сохраняем ID пользователя в сессии для автоматического открытия модального окна
+            session()->flash('edit_user_id', $id);
+            throw $e;
+        }
+
+        // Обновляем данные пользователя
+        $user->last_name = $validated['last_name'];
+        $user->first_name = $validated['first_name'];
+        $user->middle_name = $validated['middle_name'] ?? null;
+        $user->phone = $validated['phone'];
+        $user->login = $validated['login'];
+        
+        // Роль изменяется только если это не активный администратор
+        if (!$isActiveAdmin) {
+            $user->role_id = $validated['role_id'];
+        }
+
+        // Обновляем пароль только если он указан
+        if ($request->filled('password')) {
+            $user->password = Hash::make($validated['password']);
+        }
+
         $user->save();
 
-        return redirect()->route('admin.users.index')->with('success', 'Роль пользователя обновлена.');
+        return redirect()->route('admin.users.index')->with('success', 'Пользователь обновлён.');
     }
 
     // Удаление пользователя

@@ -22,7 +22,7 @@
     </div>
 </div>
 
-{{-- Афиша фильмов --}}
+{{-- Новинки --}}
 <section class="movie-section container py-5">
     <div class="row">
         {{-- Боковая панель фильтров --}}
@@ -123,7 +123,7 @@
 
         {{-- Основной контент с афишей --}}
         <div class="col-12 col-lg-9">
-            <h2 class="section-title text-white mb-4">Афиша фильмов</h2>
+            <h2 class="section-title text-white mb-4">Новинки</h2>
 
             @if(session('no_results'))
                 <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">

@@ -14,16 +14,33 @@ use Illuminate\Support\Facades\DB;
 class MovieController extends Controller
 {
     /**
-     * Отображение списка фильмов с пагинацией
+     * Отображение списка фильмов с пагинацией, поиском и фильтрацией
      */
-    public function index()
+    public function index(Request $request)
     {
-        $movies = Movie::with(['genres', 'sessions' => function($query) {
+        $query = Movie::with(['genres', 'sessions' => function($query) {
             $query->where('is_archived', false)
                   ->where('date_time_session', '>', now());
-        }])->paginate(10);
-        // Получаем уникальные жанры из pivot таблицы или из таблицы genres
-        // Получаем уникальные жанры (если в таблице genres есть movie_id, используем distinct)
+        }]);
+
+        // Поиск по названию
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('movie_title', 'like', "%{$search}%");
+        }
+
+        // Фильтрация по жанру
+        if ($request->filled('genre_id')) {
+            $query->whereHas('genres', function($q) use ($request) {
+                $q->where('genres.id_genre', $request->input('genre_id'));
+            });
+        }
+
+        $movies = $query->orderBy('id_movie', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        // Получаем уникальные жанры
         $genres = Genre::select('id_genre', 'genre_name')
             ->distinct()
             ->orderBy('genre_name')
@@ -37,6 +54,37 @@ class MovieController extends Controller
      */
     public function store(Request $request)
     {
+        // Проверяем наличие жанров перед валидацией
+        $genres = $request->input('genres', []);
+        
+        // Если жанры не переданы или пустой массив, возвращаем ошибку
+        if (empty($genres) || !is_array($genres) || count(array_filter($genres)) === 0) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['genres' => 'Необходимо выбрать хотя бы один жанр.']);
+        }
+
+        // Валидация файлов с проверкой расширения
+        if ($request->hasFile('poster')) {
+            $posterExtension = strtolower($request->file('poster')->getClientOriginalExtension());
+            $allowedExtensions = ['jpg', 'jpeg', 'png'];
+            if (!in_array($posterExtension, $allowedExtensions)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['poster' => 'Постер должен быть в формате JPG, JPEG или PNG.']);
+            }
+        }
+
+        if ($request->hasFile('baner')) {
+            $banerExtension = strtolower($request->file('baner')->getClientOriginalExtension());
+            $allowedExtensions = ['jpg', 'jpeg', 'png'];
+            if (!in_array($banerExtension, $allowedExtensions)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['baner' => 'Баннер должен быть в формате JPG, JPEG или PNG.']);
+            }
+        }
+
         $validated = $request->validate([
             'movie_title' => 'required|string|max:255',
             'duration' => 'required|string|max:255',
@@ -45,22 +93,54 @@ class MovieController extends Controller
             'description' => 'nullable|string',
             'director' => 'required|string|max:255',
             'producer' => 'required|string|max:255',
-            'poster' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'baner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'poster' => 'required|image|max:2048',
+            'baner' => 'nullable|image|max:2048',
             'genres' => 'required|array|min:1',
             'genres.*' => 'exists:genres,id_genre'
+        ], [
+            'genres.required' => 'Необходимо выбрать хотя бы один жанр.',
+            'genres.min' => 'Необходимо выбрать хотя бы один жанр.',
+            'genres.*.exists' => 'Выбранный жанр не существует.',
+            'poster.required' => 'Постер обязателен для загрузки.',
+            'poster.image' => 'Постер должен быть изображением.',
+            'poster.max' => 'Размер постера не должен превышать 2 МБ.',
+            'baner.image' => 'Баннер должен быть изображением.',
+            'baner.max' => 'Размер баннера не должен превышать 2 МБ.',
         ]);
 
         // Загрузка файлов
-        $posterPath = $request->file('poster')
-            ? '/images/posters/' . $request->file('poster')->hashName()
-            : null;
-        $banerPath = $request->file('baner')
-            ? '/images/baners/' . $request->file('baner')->hashName()
-            : null;
+        $posterPath = null;
+        $banerPath = null;
 
-        if ($posterPath) $request->file('poster')->move(public_path('images/posters'), basename($posterPath));
-        if ($banerPath) $request->file('baner')->move(public_path('images/baners'), basename($banerPath));
+        if ($request->hasFile('poster')) {
+            // Создаем директорию, если её нет
+            $imagesDir = public_path('images');
+            $postersDir = public_path('images/posters');
+            if (!file_exists($imagesDir)) {
+                mkdir($imagesDir, 0755, true);
+            }
+            if (!file_exists($postersDir)) {
+                mkdir($postersDir, 0755, true);
+            }
+            
+            $posterPath = '/images/posters/' . $request->file('poster')->hashName();
+            $request->file('poster')->move($postersDir, basename($posterPath));
+        }
+
+        if ($request->hasFile('baner')) {
+            // Создаем директорию, если её нет
+            $imagesDir = public_path('images');
+            $banersDir = public_path('images/baners');
+            if (!file_exists($imagesDir)) {
+                mkdir($imagesDir, 0755, true);
+            }
+            if (!file_exists($banersDir)) {
+                mkdir($banersDir, 0755, true);
+            }
+            
+            $banerPath = '/images/baners/' . $request->file('baner')->hashName();
+            $request->file('baner')->move($banersDir, basename($banerPath));
+        }
 
         // Обработка описания - убираем лишние пробелы
         $description = $validated['description'] ?? null;

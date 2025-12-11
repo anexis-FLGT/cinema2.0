@@ -131,6 +131,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:1'])->group(fu
     Route::get('/reports/attendance/pdf', [\App\Http\Controllers\Admin\ReportController::class, 'attendancePdf'])->name('reports.attendance.pdf');
     Route::get('/reports/movies/pdf', [\App\Http\Controllers\Admin\ReportController::class, 'moviesPdf'])->name('reports.movies.pdf');
 
+    // Раздел истории операций
+    Route::get('/history', [\App\Http\Controllers\Admin\HistoryController::class, 'index'])->name('history.index');
+    Route::get('/history/{id}', [\App\Http\Controllers\Admin\HistoryController::class, 'show'])->name('history.show');
+
     // Раздел залов (CRUD)
     Route::get('/halls', [\App\Http\Controllers\Admin\HallController::class, 'index'])->name('halls.index');
     Route::post('/halls', [\App\Http\Controllers\Admin\HallController::class, 'store'])->name('halls.store');

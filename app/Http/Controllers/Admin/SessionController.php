@@ -16,15 +16,36 @@ class SessionController extends Controller
     /**
      * Отображение списка сеансов
      */
-    public function index()
+    public function index(Request $request)
     {
-        $sessions = Session::with(['movie', 'hall'])
-            ->where('is_archived', false)
-            ->orderBy('date_time_session', 'asc')
-            ->paginate(10);
+        $query = Session::with(['movie', 'hall'])
+            ->where('is_archived', false);
+
+        // Фильтрация по фильму
+        if ($request->filled('movie_id')) {
+            $query->where('movie_id', $request->input('movie_id'));
+        }
+
+        // Фильтрация по залу
+        if ($request->filled('hall_id')) {
+            $query->where('hall_id', $request->input('hall_id'));
+        }
+
+        // Фильтрация по дате
+        if ($request->filled('date_from')) {
+            $query->whereDate('date_time_session', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date_time_session', '<=', $request->input('date_to'));
+        }
+
+        $sessions = $query->orderBy('date_time_session', 'asc')
+            ->paginate(10)
+            ->withQueryString();
         
-        $movies = Movie::all();
-        $halls = Hall::all();
+        $movies = Movie::orderBy('movie_title')->get();
+        $halls = Hall::orderBy('hall_name')->get();
 
         return view('admin.sessions', compact('sessions', 'movies', 'halls'));
     }

@@ -97,8 +97,11 @@ class Booking extends Model
         $expirationTime = Carbon::now()->subMinutes($paymentTimeoutMinutes);
 
         // Находим все бронирования со статусом "ожидание", созданные до времени истечения
-        $expiredBookings = static::whereHas('payment', function($query) {
-                $query->where('payment_status', 'ожидание');
+        // Включаем как бронирования с платежами со статусом "ожидание", так и без платежей
+        $expiredBookings = static::where(function($query) {
+                $query->whereHas('payment', function($q) {
+                    $q->where('payment_status', 'ожидание');
+                })->orWhereDoesntHave('payment');
             })
             ->where('created_ad', '<=', $expirationTime)
             ->with(['payment', 'seat'])
@@ -113,7 +116,7 @@ class Booking extends Model
 
         foreach ($expiredBookings as $booking) {
             try {
-                // Обновляем статус платежа на "отменено"
+                // Обновляем статус платежа на "отменено", если платеж существует
                 if ($booking->payment) {
                     $booking->payment->payment_status = 'отменено';
                     $booking->payment->save();

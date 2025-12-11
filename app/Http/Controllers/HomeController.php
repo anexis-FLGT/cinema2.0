@@ -13,7 +13,64 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-        // Получаем все фильмы с жанрами и сеансами
+        // Получаем все жанры для фильтра
+        $genres = Genre::orderBy('genre_name', 'asc')->get();
+
+        // Баннеры — первые 5 фильмов из БД, у которых есть баннер
+        $bannersQuery = Movie::whereNotNull('baner')
+            ->where('baner', '!=', '')
+            ->orderBy('id_movie', 'asc')
+            ->limit(5)
+            ->get();
+        
+        $banners = collect();
+        foreach ($bannersQuery as $movie) {
+            // Проверяем, что у фильма есть реальный баннер (не null и не пустая строка)
+            if ($movie->baner && trim($movie->baner) !== '') {
+                $bannerPath = $this->fixPath($movie->baner, 'images/banners/placeholder.jpg');
+                // Проверяем, что баннер не является заглушкой
+                if (strpos($bannerPath, 'placeholder') === false) {
+                    $banners->push((object)[
+                        'movie_title' => $movie->movie_title,
+                        'baner' => $bannerPath
+                    ]);
+                }
+            }
+        }
+
+        // Если баннеров меньше 5 — добавляем заглушки
+        if ($banners->count() < 5) {
+            $needed = 5 - $banners->count();
+            for ($i = 0; $i < $needed; $i++) {
+                $banners->push((object)[
+                    'movie_title' => 'Заглушка',
+                    'baner' => asset('images/banners/placeholder.jpg')
+                ]);
+            }
+        }
+
+        // Проверяем, применены ли фильтры
+        $hasFilters = $request->filled('search') || $request->filled('genre') || 
+                      $request->filled('duration_min') || $request->filled('duration_max') || 
+                      $request->filled('show_date');
+
+        // Если фильтры не применены, показываем последние 10 добавленных фильмов
+        if (!$hasFilters) {
+            $movies = Movie::with(['genres', 'sessions'])
+                ->orderBy('id_movie', 'desc')
+                ->limit(10)
+                ->get();
+            
+            // Обрабатываем пути к постерам и баннерам
+            foreach ($movies as $movie) {
+                $movie->poster = $this->fixPath($movie->poster, 'images/posters/placeholder.jpg');
+                $movie->baner  = $this->fixPath($movie->baner, 'images/banners/placeholder.jpg');
+            }
+
+            return view('index', compact('movies', 'banners', 'genres'));
+        }
+
+        // Если фильтры применены, используем старую логику
         $query = Movie::with(['genres', 'sessions']);
 
         // Поиск по названию
@@ -80,45 +137,10 @@ class HomeController extends Controller
             $movie->baner  = $this->fixPath($movie->baner, 'images/banners/placeholder.jpg');
         }
 
-        // Получаем все жанры для фильтра
-        $genres = Genre::orderBy('genre_name', 'asc')->get();
-
-        // Проверяем, применены ли фильтры
-        $hasFilters = $request->filled('search') || $request->filled('genre') || 
-                      $request->filled('duration_min') || $request->filled('duration_max') || 
-                      $request->filled('show_date');
-
         // Если фильмов нет и применены фильтры — показываем уведомление
+        // Баннеры уже сформированы выше (первые 5 фильмов из БД с баннерами)
         if ($movies->isEmpty() && $hasFilters) {
-            // Создаем пустую коллекцию для баннеров
-            $banners = collect();
-            for ($i = 0; $i < 3; $i++) {
-                $banners->push((object)[
-                    'movie_title' => 'Заглушка',
-                    'baner' => asset('images/banners/placeholder.jpg')
-                ]);
-            }
-            
             return view('index', compact('movies', 'banners', 'genres'))->with('no_results', true);
-        }
-
-        // Баннеры — первые 3 фильма (только если есть фильмы)
-        $banners = $movies->take(3);
-
-        // Если баннеров меньше 3 — добавляем заглушки
-        if ($banners->count() < 3 && $banners->count() > 0) {
-            $needed = 3 - $banners->count();
-            for ($i = 0; $i < $needed; $i++) {
-                $banners->push((object)[
-                    'movie_title' => 'Заглушка',
-                    'baner' => asset('images/banners/placeholder.jpg')
-                ]);
-            }
-        }
-
-        // Получаем все жанры для фильтра (если еще не получены)
-        if (!isset($genres)) {
-            $genres = Genre::orderBy('genre_name', 'asc')->get();
         }
 
         return view('index', compact('movies', 'banners', 'genres'));

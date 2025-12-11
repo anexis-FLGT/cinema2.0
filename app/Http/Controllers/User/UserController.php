@@ -19,15 +19,22 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        // Автоматически освобождаем истекшие бронирования
+        Booking::expireOldBookings();
+        
         $user = Auth::user(); // Получаем текущего пользователя
         $now = \Carbon\Carbon::now();
         
         // Получаем активные бронирования (будущие сеансы)
+        // expireOldBookings уже удалил истекшие бронирования, поэтому просто фильтруем по статусу
         $activeBookingsQuery = Booking::with(['session.movie', 'session.hall', 'session', 'seat', 'payment'])
             ->join('cinema_sessions', 'bookings.session_id', '=', 'cinema_sessions.id_session')
             ->where('bookings.user_id', $user->id_user)
-            ->whereHas('payment', function($query) {
-                $query->where('payment_status', '!=', 'отменено');
+            ->where(function($query) {
+                // Показываем только не отмененные бронирования
+                $query->whereHas('payment', function($q) {
+                    $q->where('payment_status', '!=', 'отменено');
+                })->orWhereDoesntHave('payment');
             })
             ->where('cinema_sessions.date_time_session', '>', $now)
             ->orderBy('cinema_sessions.date_time_session', 'desc')
@@ -52,6 +59,9 @@ class UserController extends Controller
      */
     public function history(Request $request)
     {
+        // Автоматически освобождаем истекшие бронирования
+        Booking::expireOldBookings();
+        
         $user = Auth::user();
         $now = \Carbon\Carbon::now();
         
@@ -59,8 +69,10 @@ class UserController extends Controller
         $historyBookingsQuery = Booking::with(['session.movie', 'session.hall', 'session', 'seat', 'payment'])
             ->join('cinema_sessions', 'bookings.session_id', '=', 'cinema_sessions.id_session')
             ->where('bookings.user_id', $user->id_user)
-            ->whereHas('payment', function($query) {
-                $query->where('payment_status', '!=', 'отменено');
+            ->where(function($query) {
+                $query->whereHas('payment', function($q) {
+                    $q->where('payment_status', '!=', 'отменено');
+                })->orWhereDoesntHave('payment');
             })
             ->where('cinema_sessions.date_time_session', '<=', $now)
             ->orderBy('cinema_sessions.date_time_session', 'desc')

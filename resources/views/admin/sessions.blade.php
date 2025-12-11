@@ -29,6 +29,50 @@
             </button>
         </div>
 
+        {{-- Форма фильтрации --}}
+        <form method="GET" action="{{ route('admin.sessions.index') }}" class="mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Фильм</label>
+                    <select name="movie_id" class="form-select">
+                        <option value="">Все фильмы</option>
+                        @foreach($movies as $movie)
+                            <option value="{{ $movie->id_movie }}" @if(request('movie_id') == $movie->id_movie) selected @endif>{{ $movie->movie_title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Зал</label>
+                    <select name="hall_id" class="form-select">
+                        <option value="">Все залы</option>
+                        @foreach($halls as $hall)
+                            <option value="{{ $hall->id_hall }}" @if(request('hall_id') == $hall->id_hall) selected @endif>{{ $hall->hall_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Дата от</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Дата до</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success text-white w-100">
+                        <i class="bi bi-funnel me-1"></i> Применить
+                    </button>
+                </div>
+                @if(request('movie_id') || request('hall_id') || request('date_from') || request('date_to'))
+                    <div class="col-12">
+                        <a href="{{ route('admin.sessions.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle me-1"></i> Сбросить фильтры
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </form>
+
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead class="table-success">
@@ -185,7 +229,7 @@
         {{-- Пагинация --}}
         @if($sessions->hasPages())
             <div class="mt-4">
-                {{ $sessions->links('pagination::bootstrap-4') }}
+                {{ $sessions->appends(request()->query())->links('pagination::bootstrap-4') }}
             </div>
         @endif
     </div>
@@ -266,6 +310,16 @@
     
     [data-theme="dark"] .session-datetime-input::-webkit-datetime-edit {
         color: #ffffff;
+    }
+    
+    /* Стили для фильтрации - адаптация под темы */
+    [data-theme="dark"] input[type="date"] {
+        background-color: var(--input-bg) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
     }
 </style>
 @endsection
