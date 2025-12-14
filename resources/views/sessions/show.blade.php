@@ -3,7 +3,34 @@
 @section('title', 'Расписание сеансов — MaxTicket')
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('assets/css/session.css') }}">    
+<link rel="stylesheet" href="{{ asset('assets/css/session.css') }}">
+<style>
+    /* Переопределение стилей для карточек сеансов - должно быть после всех CSS */
+    /* Эффект как на странице О нас: красная подсветка + поднятие карточки */
+    .session-time-btn,
+    .btn.session-time-btn,
+    a.session-time-btn,
+    button.session-time-btn {
+        transition: all 0.3s ease !important;
+        position: relative !important;
+    }
+    
+    /* Все возможные комбинации для максимальной специфичности */
+    .btn.btn-outline-light.session-time-btn:hover,
+    .btn-outline-light.session-time-btn:hover,
+    a.btn.btn-outline-light.session-time-btn:hover,
+    button.btn.btn-outline-light.session-time-btn:hover,
+    a.session-time-btn.btn.btn-outline-light:hover,
+    button.session-time-btn.btn.btn-outline-light:hover,
+    .session-time-btn.btn-outline-light:hover {
+        background-color: #e50914 !important;
+        border-color: #e50914 !important;
+        color: #fff !important;
+        transform: translateY(-5px) scale(1.05) !important;
+        box-shadow: 0 8px 40px rgba(229, 9, 20, 0.6) !important;
+        opacity: 1 !important; /* Убираем opacity при hover для неавторизованных */
+    }
+</style>    
 
 <div class="container py-5">
     <h1 class="text-center mb-5 fw-bold" style="color: var(--text-primary);">

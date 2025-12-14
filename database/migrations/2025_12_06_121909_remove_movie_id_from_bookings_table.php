@@ -12,12 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            // Сначала удаляем внешний ключ
-            $table->dropForeign(['movie_id']);
-            // Затем удаляем индекс
-            $table->dropIndex(['movie_id']);
-            // И наконец удаляем колонку
-            $table->dropColumn('movie_id');
+            // Проверяем существование колонки перед удалением
+            if (Schema::hasColumn('bookings', 'movie_id')) {
+                // Сначала удаляем внешний ключ
+                $table->dropForeign(['movie_id']);
+                // Затем удаляем индекс
+                $table->dropIndex(['movie_id']);
+                // И наконец удаляем колонку
+                $table->dropColumn('movie_id');
+            }
         });
     }
 

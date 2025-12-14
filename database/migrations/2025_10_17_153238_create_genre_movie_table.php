@@ -17,6 +17,10 @@ return new class extends Migration
                 $table->foreignId('movie_id')->constrained('movies', 'id_movie')->onDelete('cascade');
                 $table->foreignId('genre_id')->constrained('genres', 'id_genre')->onDelete('cascade');
                 $table->unique(['movie_id', 'genre_id']);
+                
+                // Индексы для оптимизации запросов
+                $table->index('movie_id');
+                $table->index('genre_id');
             });
         }
     }

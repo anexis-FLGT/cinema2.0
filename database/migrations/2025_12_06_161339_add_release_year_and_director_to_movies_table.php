@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('movies', function (Blueprint $table) {
             // Добавляем год выпуска после duration
-            $table->year('release_year')->nullable()->after('duration');
-            // Добавляем режиссера после description
-            $table->string('director', 255)->nullable()->after('description');
+            $table->integer('release_year')->nullable()->after('duration');
+            // Добавляем режиссера после description (TEXT(300) по ER-диаграмме, используем text)
+            $table->text('director')->nullable()->after('description');
         });
     }
 

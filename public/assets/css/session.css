@@ -1,28 +1,43 @@
-    .session-time-btn {
-        min-width: 100px;
-        transition: all 0.3s ease;
-    }
+/* Стили для карточек сеансов */
+.session-time-btn {
+    min-width: 100px;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+}
 
-    .session-time-btn:hover {
-        background-color: var(--accent-primary);
-        border-color: var(--accent-primary);
-        color: var(--text-primary);
-    }
+/* Эффект при наведении - красная подсветка и поднятие как на странице О нас */
+.session-time-btn:hover,
+.btn.btn-outline-light.session-time-btn:hover,
+.btn-outline-light.session-time-btn:hover,
+a.btn.btn-outline-light.session-time-btn:hover,
+button.btn.btn-outline-light.session-time-btn:hover,
+a.session-time-btn:hover,
+button.session-time-btn:hover {
+    background-color: #e50914 !important;
+    border-color: #e50914 !important;
+    color: #fff !important;
+    transform: translateY(-5px) scale(1.05) !important;
+    box-shadow: 0 8px 40px rgba(229, 9, 20, 0.6) !important;
+}
 
-    .card {
-        transition: transform 0.3s ease;
-        background-color: var(--bg-card);
-        color: var(--text-primary);
-        border-color: var(--border-color);
-    }
+/* Стили для карточек фильмов - без эффекта поднятия */
+.card {
+    transition: transform 0.3s ease;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
 
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px var(--shadow-md);
-    }
+/* Убираем эффект поднятия у карточек фильмов (с row g-0) */
+.card:hover,
+.card.row:hover,
+.card[class*="row"]:hover {
+    transform: none !important;
+    box-shadow: 0 8px 20px var(--shadow-md);
+}
 
-    @media (max-width: 768px) {
-        .card-body {
-            padding: 1rem;
-        }
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
     }
+}

@@ -56,31 +56,22 @@
 
                     {{-- Фильтр по длительности --}}
                     <div class="filter-group mb-3">
-                        <label class="filter-label">Длительность (мин)</label>
+                        <label class="filter-label">Длительность</label>
                         <div class="d-flex gap-2">
-                            <input type="number" 
+                            <input type="text" 
                                    name="duration_min" 
                                    class="form-control form-control-sm" 
                                    placeholder="От" 
-                                   min="0"
                                    value="{{ request('duration_min') }}">
-                            <input type="number" 
+                            <input type="text" 
                                    name="duration_max" 
                                    class="form-control form-control-sm" 
                                    placeholder="До" 
-                                   min="0"
                                    value="{{ request('duration_max') }}">
                         </div>
-                    </div>
-
-                    {{-- Фильтр по дате показа --}}
-                    <div class="filter-group mb-3">
-                        <label class="filter-label">Дата показа</label>
-                        <input type="date" 
-                               name="show_date" 
-                               class="form-control form-control-sm" 
-                               value="{{ request('show_date') }}"
-                               min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                        <small class="text-white" style="font-size: 0.75rem; display: block; margin-top: 0.25rem; opacity: 0.8;">
+                            Формат: 1ч. 30 мин, 1:30, 90 мин или 90
+                        </small>
                     </div>
 
                     {{-- Сортировка (радио-кнопки) --}}
@@ -123,7 +114,7 @@
 
         {{-- Основной контент с афишей --}}
         <div class="col-12 col-lg-9">
-            <h2 class="section-title text-white mb-4">Новинки</h2>
+            <h2 class="section-title text-white mb-4">Все фильмы</h2>
 
             @if(session('no_results'))
                 <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
@@ -162,6 +153,12 @@
                                         <span class="detail-label">Длительность:</span>
                                         <span class="detail-value">{{ $movie->duration ?? 'Не указано' }}</span>
                                     </div>
+                                    @if($movie->release_year)
+                                        <div class="movie-detail-row">
+                                            <span class="detail-label">Год выпуска:</span>
+                                            <span class="detail-value">{{ $movie->release_year }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <a href="{{ route('movie.show', $movie->id_movie) }}" class="btn btn-outline-light mt-3">Подробнее</a>
                             </div>

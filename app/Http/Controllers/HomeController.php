@@ -51,26 +51,9 @@ class HomeController extends Controller
 
         // Проверяем, применены ли фильтры
         $hasFilters = $request->filled('search') || $request->filled('genre') || 
-                      $request->filled('duration_min') || $request->filled('duration_max') || 
-                      $request->filled('show_date');
+                      $request->filled('duration_min') || $request->filled('duration_max');
 
-        // Если фильтры не применены, показываем последние 10 добавленных фильмов
-        if (!$hasFilters) {
-            $movies = Movie::with(['genres', 'sessions'])
-                ->orderBy('id_movie', 'desc')
-                ->limit(10)
-                ->get();
-            
-            // Обрабатываем пути к постерам и баннерам
-            foreach ($movies as $movie) {
-                $movie->poster = $this->fixPath($movie->poster, 'images/posters/placeholder.jpg');
-                $movie->baner  = $this->fixPath($movie->baner, 'images/banners/placeholder.jpg');
-            }
-
-            return view('index', compact('movies', 'banners', 'genres'));
-        }
-
-        // Если фильтры применены, используем старую логику
+        // Начинаем с запроса всех фильмов
         $query = Movie::with(['genres', 'sessions']);
 
         // Поиск по названию
@@ -87,21 +70,25 @@ class HomeController extends Controller
             });
         }
 
-        // Фильтрация по дате показа
-        if ($request->filled('show_date')) {
-            $showDate = $request->input('show_date');
-            $query->whereHas('sessions', function($q) use ($showDate) {
-                $q->whereDate('date_time_session', $showDate);
-            });
-        }
-
         // Получаем фильмы
         $movies = $query->get();
 
         // Фильтрация по длительности (после получения, т.к. duration хранится как строка)
         if ($request->filled('duration_min') || $request->filled('duration_max')) {
-            $minMinutes = $request->filled('duration_min') ? (int)$request->input('duration_min') : null;
-            $maxMinutes = $request->filled('duration_max') ? (int)$request->input('duration_max') : null;
+            $minMinutes = null;
+            $maxMinutes = null;
+            
+            // Парсим минимальную длительность
+            if ($request->filled('duration_min')) {
+                $minDurationInput = trim($request->input('duration_min'));
+                $minMinutes = $this->parseDurationInputToMinutes($minDurationInput);
+            }
+            
+            // Парсим максимальную длительность
+            if ($request->filled('duration_max')) {
+                $maxDurationInput = trim($request->input('duration_max'));
+                $maxMinutes = $this->parseDurationInputToMinutes($maxDurationInput);
+            }
             
             $movies = $movies->filter(function($movie) use ($minMinutes, $maxMinutes) {
                 $minutes = $this->parseDurationToMinutes($movie->duration);
@@ -122,13 +109,22 @@ class HomeController extends Controller
         $sortBy = $request->input('sort', 'newest'); // По умолчанию сначала новые
         switch ($sortBy) {
             case 'newest':
-                $movies = $movies->sortByDesc('id_movie')->values();
+                // Сортируем по году выпуска (новые сначала), null значения в конец
+                $movies = $movies->sortBy(function($movie) {
+                    return $movie->release_year ?? 0;
+                }, SORT_REGULAR, true)->values();
                 break;
             case 'oldest':
-                $movies = $movies->sortBy('id_movie')->values();
+                // Сортируем по году выпуска (старые сначала), null значения в конец
+                $movies = $movies->sortBy(function($movie) {
+                    return $movie->release_year ?? 9999;
+                })->values();
                 break;
             default:
-                $movies = $movies->sortByDesc('id_movie')->values();
+                // Сортируем по году выпуска (новые сначала), null значения в конец
+                $movies = $movies->sortBy(function($movie) {
+                    return $movie->release_year ?? 0;
+                }, SORT_REGULAR, true)->values();
         }
 
         // Обрабатываем пути к постерам и баннерам
@@ -212,5 +208,46 @@ class HomeController extends Controller
         }
 
         return $minutes;
+    }
+
+    /**
+     * Парсит ввод пользователя для длительности в минуты
+     * Поддерживает форматы: "1ч. 30 мин", "1ч 30мин", "1:30", "90 мин", "90"
+     */
+    private function parseDurationInputToMinutes($input)
+    {
+        if (empty($input)) {
+            return null;
+        }
+
+        $input = trim($input);
+        $minutes = 0;
+
+        // Формат "1ч. 30 мин" или "1ч 30мин" или "1 ч 30 мин" - ищем часы и минуты вместе
+        if (preg_match('/(\d+)\s*ч\.?\s*(\d+)\s*мин\.?/u', $input, $matches)) {
+            $hours = (int)$matches[1];
+            $mins = (int)$matches[2];
+            $minutes = $hours * 60 + $mins;
+        }
+        // Формат "1:30" (часы:минуты)
+        elseif (preg_match('/^(\d+):(\d+)$/', $input, $matches)) {
+            $hours = (int)$matches[1];
+            $mins = (int)$matches[2];
+            $minutes = $hours * 60 + $mins;
+        }
+        // Только часы "2ч" или "2 ч." или "2ч."
+        elseif (preg_match('/^(\d+)\s*ч\.?$/u', $input, $matches)) {
+            $minutes = (int)$matches[1] * 60;
+        }
+        // Только минуты "90 мин" или "90 мин." или "90мин"
+        elseif (preg_match('/^(\d+)\s*мин\.?$/u', $input, $matches)) {
+            $minutes = (int)$matches[1];
+        }
+        // Просто число - считаем минутами
+        elseif (preg_match('/^(\d+)$/', $input, $matches)) {
+            $minutes = (int)$matches[1];
+        }
+
+        return $minutes > 0 ? $minutes : null;
     }
 }

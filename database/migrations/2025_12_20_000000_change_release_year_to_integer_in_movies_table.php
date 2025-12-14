@@ -12,8 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Изменяем тип колонки release_year с YEAR на INTEGER
-        DB::statement('ALTER TABLE movies MODIFY COLUMN release_year INTEGER NULL');
+        // Изменяем тип колонки release_year с YEAR на INTEGER (если она еще YEAR)
+        // Проверяем тип колонки перед изменением
+        $columnInfo = DB::select("SHOW COLUMNS FROM `movies` LIKE 'release_year'");
+        if (!empty($columnInfo) && strpos($columnInfo[0]->Type, 'year') !== false) {
+            DB::statement('ALTER TABLE movies MODIFY COLUMN release_year INTEGER NULL');
+        }
     }
 
     /**
