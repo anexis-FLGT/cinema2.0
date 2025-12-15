@@ -133,5 +133,26 @@
     }
 </style>
 
+<script>
+// Автоматически открываем модальное окно добавления зала, если есть ошибки валидации
+@if(($errors->any() || session('error')) && !session('editing_hall_id'))
+    document.addEventListener('DOMContentLoaded', function() {
+        const addHallModal = new bootstrap.Modal(document.getElementById('addHallModal'));
+        addHallModal.show();
+    });
+@endif
+
+// Автоматически открываем модальное окно редактирования зала, если есть ошибки валидации
+@if(session('editing_hall_id'))
+    document.addEventListener('DOMContentLoaded', function() {
+        const editHallModal = document.getElementById('editHallModal{{ session('editing_hall_id') }}');
+        if (editHallModal) {
+            const modal = new bootstrap.Modal(editHallModal);
+            modal.show();
+        }
+    });
+@endif
+</script>
+
 @endsection
 

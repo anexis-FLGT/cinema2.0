@@ -8,13 +8,30 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('genres', function (Blueprint $table) {
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        
+        Schema::create('genres', function (Blueprint $table) use ($driver) {
             $table->id('id_genre');
-            $table->enum('genre_name', ['Драма', 'Комедия', 'Триллер', 'Боевик', 'Фантастика', 'Детектив', 'Ужасы', 'Мелодрама', 'Фэнтези', 'Вестерн', 'Мультфильм']);
-            $table->foreignId('movie_id')->constrained('movies', 'id_movie');
+            
+            // Для SQLite используем string вместо enum
+            if ($driver === 'sqlite') {
+                $table->string('genre_name');
+            } else {
+                $table->enum('genre_name', ['Драма', 'Комедия', 'Триллер', 'Боевик', 'Фантастика', 'Детектив', 'Ужасы', 'Мелодрама', 'Фэнтези', 'Вестерн', 'Мультфильм']);
+            }
+            
+            // Внешний ключ на movies создавать не нужно, так как он удаляется позже
+            // Вместо этого создаем nullable колонку, которая будет удалена в следующей миграции
+            if ($driver !== 'sqlite') {
+                $table->foreignId('movie_id')->nullable()->constrained('movies', 'id_movie');
+            } else {
+                $table->unsignedBigInteger('movie_id')->nullable();
+            }
             
             $table->index('id_genre');
-            $table->index('movie_id');
+            if ($driver !== 'sqlite') {
+                $table->index('movie_id');
+            }
         });
     }
 

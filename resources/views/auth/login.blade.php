@@ -31,12 +31,12 @@
                 <div class="alert alert-danger text-center">{{ $errors->first() }}</div>
             @endif
 
-            <form method="POST" action="{{ route('login.post') }}">
+            <form method="POST" action="{{ route('login.post') }}" id="loginForm">
                 @csrf
 
                 <div class="mb-3">
                     <label class="form-label">Логин</label>
-                    <input type="text" name="login" class="form-control" required>
+                    <input type="text" name="login" class="form-control" value="{{ old('login') }}" required autofocus>
                 </div>
 
                 <div class="mb-3 position-relative">
@@ -45,7 +45,10 @@
                     <i class="bi bi-eye password-toggle" onclick="togglePassword()"></i>
                 </div>
 
-                <button type="submit" class="btn btn-danger w-100 mt-3 fw-semibold">Войти</button>
+                <button type="submit" class="btn btn-danger w-100 mt-3 fw-semibold" id="loginButton">
+                    <span class="spinner-border spinner-border-sm d-none" id="loginSpinner" role="status" aria-hidden="true"></span>
+                    <span id="loginButtonText">Войти</span>
+                </button>
             </form>
 
             <div class="text-center mt-4">
@@ -56,6 +59,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('assets/js/theme.js') }}"></script>
     <script>
         function togglePassword() {
@@ -69,6 +73,34 @@
                 icon.classList.replace('bi-eye-slash', 'bi-eye');
             }
         }
+
+        // Обработка отправки формы
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const loginButtonText = document.getElementById('loginButtonText');
+            
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const login = form.querySelector('input[name="login"]').value.trim();
+                    const password = form.querySelector('input[name="password"]').value;
+                    
+                    if (!login || !password) {
+                        e.preventDefault();
+                        alert('Пожалуйста, заполните все поля');
+                        return false;
+                    }
+                    
+                    // Показываем индикатор загрузки
+                    if (loginButton) {
+                        loginButton.disabled = true;
+                        if (loginSpinner) loginSpinner.classList.remove('d-none');
+                        if (loginButtonText) loginButtonText.textContent = 'Вход...';
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

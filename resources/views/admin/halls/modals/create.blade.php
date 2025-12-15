@@ -9,20 +9,45 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto; flex: 1; min-height: 0;">
+                    {{-- Сообщения об ошибках --}}
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     {{-- Основная информация --}}
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Название зала <span class="text-danger">*</span></label>
-                            <input type="text" name="hall_name" class="form-control" value="{{ old('hall_name') }}" required>
+                            <input type="text" name="hall_name" class="form-control @error('hall_name') is-invalid @enderror" value="{{ old('hall_name') }}" required>
+                            @error('hall_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Тип зала <span class="text-danger">*</span></label>
-                            <select name="type_hall" class="form-select" required>
+                            <select name="type_hall" class="form-select @error('type_hall') is-invalid @enderror" required>
                                 <option value="">Выберите тип зала</option>
                                 <option value="большой" {{ old('type_hall') == 'большой' ? 'selected' : '' }}>Большой</option>
                                 <option value="средний" {{ old('type_hall') == 'средний' ? 'selected' : '' }}>Средний</option>
                                 <option value="малый" {{ old('type_hall') == 'малый' ? 'selected' : '' }}>Малый</option>
                             </select>
+                            @error('type_hall')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="row mb-4">
@@ -34,7 +59,10 @@
                     <div class="row mb-4">
                         <div class="col-md-12">
                             <label class="form-label">Фото зала <span class="text-danger">*</span></label>
-                            <input type="file" name="hall_photo" class="form-control" accept="image/*" required>
+                            <input type="file" name="hall_photo" class="form-control @error('hall_photo') is-invalid @enderror" accept="image/*" required>
+                            @error('hall_photo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
@@ -82,6 +110,9 @@
                                     <p class="text-muted text-center">Нажмите "Сгенерировать схему" для создания схемы зала</p>
                                 </div>
                                 <input type="hidden" name="seats_data" id="seatsData" required>
+                                @error('seats_data')
+                                    <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             {{-- Легенда --}}

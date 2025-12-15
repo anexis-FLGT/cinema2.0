@@ -54,6 +54,7 @@ Route::get('/movie/{id}', [HomeController::class, 'showMovie'])->name('movie.sho
 |-------------------------------------------------------------------------- 
 */
 Route::get('/halls', [HallController::class, 'index'])->name('halls');
+Route::get('/halls/{id}', [HallController::class, 'show'])->name('halls.show');
 
 /*
 |-------------------------------------------------------------------------- 

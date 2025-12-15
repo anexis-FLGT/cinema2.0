@@ -29,7 +29,9 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            // Используем unsignedBigInteger вместо foreignId, чтобы не создавать внешний ключ
+            // Laravel будет использовать это поле для хранения id_user из таблицы cinema_users
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');

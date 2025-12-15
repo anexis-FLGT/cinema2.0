@@ -47,4 +47,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id', 'id_role'); //для разраничения по ролям
     }
+
+    /**
+     * Получить имя поля для авторизации
+     * ВАЖНО: Для сессий Laravel использует primary key (id_user), а не login
+     * getAuthIdentifierName() используется только для форм авторизации
+     * Но мы НЕ переопределяем его, чтобы Laravel использовал primary key для сессий
+     */
+    // Убираем переопределение getAuthIdentifierName() - Laravel должен использовать primary key для сессий
+    
+    /**
+     * Получить уникальный идентификатор пользователя для сессии
+     * Laravel использует это для сохранения пользователя в сессии
+     * По умолчанию Laravel использует getKey(), который возвращает id_user
+     */
+    // getAuthIdentifier() уже работает правильно через getKey()
 }

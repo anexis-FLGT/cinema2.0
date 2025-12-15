@@ -18,6 +18,19 @@
     margin-bottom: 2rem;
 }
 
+/* Убираем анимацию поднятия у всего блока схемы зала */
+.card:hover {
+    transform: none !important;
+}
+
+/* Убираем анимацию поднятия у элементов схемы зала */
+.card:hover .hall-container,
+.card:hover .seats-grid,
+.hall-container:hover,
+.seats-grid:hover {
+    transform: none !important;
+}
+
 .hall-name {
     font-size: 1.25rem;
     font-weight: bold;
@@ -118,4 +131,47 @@
 .seat-legend.seat-booked {
     background-color: #dc3545;
     border-color: #dc3545;
+}
+
+/* Стили для кнопки "Очистить выбор" - адаптация под темы */
+/* Кнопка находится на светлом фоне alert-info, поэтому нужен темный текст */
+#selected-seats-info .btn-outline-light {
+    border-color: #333;
+    color: #333;
+    background-color: transparent;
+    transition: all 0.3s ease;
+}
+
+#selected-seats-info .btn-outline-light:hover {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(229, 9, 20, 0.3);
+}
+
+/* Для темной темы - темный текст на светлом фоне alert */
+[data-theme="dark"] #selected-seats-info .btn-outline-light {
+    border-color: #333;
+    color: #333;
+    background-color: transparent;
+}
+
+[data-theme="dark"] #selected-seats-info .btn-outline-light:hover {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+}
+
+/* Для светлой темы - тоже темный текст */
+[data-theme="light"] #selected-seats-info .btn-outline-light {
+    border-color: #333;
+    color: #333;
+    background-color: transparent;
+}
+
+[data-theme="light"] #selected-seats-info .btn-outline-light:hover {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
 }

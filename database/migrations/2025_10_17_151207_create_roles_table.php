@@ -8,9 +8,17 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('roles', function (Blueprint $table) {
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        
+        Schema::create('roles', function (Blueprint $table) use ($driver) {
             $table->id('id_role');
-            $table->enum('role_name', ['Администратор', 'Пользователь', 'Гость']);
+            
+            // Для SQLite используем string вместо enum
+            if ($driver === 'sqlite') {
+                $table->string('role_name');
+            } else {
+                $table->enum('role_name', ['Администратор', 'Пользователь', 'Гость']);
+            }
             
             $table->index('id_role');
         });

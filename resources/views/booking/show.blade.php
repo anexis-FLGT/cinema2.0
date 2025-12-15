@@ -4,6 +4,12 @@
 
 @section('content')
 <link rel="stylesheet" href="{{ asset('assets/css/booking.css') }}">
+<style>
+    /* Убираем анимацию поднятия у карточки со схемой зала */
+    .card:hover {
+        transform: none !important;
+    }
+</style>
 
 <div class="container my-5" style="color: var(--text-primary);">
     {{-- Информация о фильме и сеансе --}}

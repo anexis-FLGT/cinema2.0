@@ -12,8 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Изменяем тип колонки genre_name с enum на varchar(45)
-        DB::statement('ALTER TABLE `genres` MODIFY COLUMN `genre_name` VARCHAR(45) NOT NULL');
+        // Проверяем тип базы данных
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            // Для MySQL изменяем тип колонки genre_name с enum на varchar(45)
+            DB::statement('ALTER TABLE `genres` MODIFY COLUMN `genre_name` VARCHAR(45) NOT NULL');
+        }
+        // Для SQLite изменение типа колонки не поддерживается напрямую
+        // В SQLite VARCHAR обрабатывается как TEXT, что совместимо
     }
 
     /**
@@ -21,7 +28,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Возвращаем обратно к enum (если нужно откатить)
-        DB::statement("ALTER TABLE `genres` MODIFY COLUMN `genre_name` ENUM('Драма', 'Комедия', 'Триллер', 'Боевик', 'Фантастика', 'Детектив', 'Ужасы', 'Мелодрама', 'Фэнтези', 'Вестерн', 'Мультфильм') NOT NULL");
+        // Проверяем тип базы данных
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            // Возвращаем обратно к enum (если нужно откатить)
+            DB::statement("ALTER TABLE `genres` MODIFY COLUMN `genre_name` ENUM('Драма', 'Комедия', 'Триллер', 'Боевик', 'Фантастика', 'Детектив', 'Ужасы', 'Мелодрама', 'Фэнтези', 'Вестерн', 'Мультфильм') NOT NULL");
+        }
+        // Для SQLite изменение типа колонки не поддерживается напрямую
     }
 };

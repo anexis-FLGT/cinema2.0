@@ -28,64 +28,79 @@ class HallController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'hall_name' => 'required|string|max:255',
-            'type_hall' => 'required|in:большой,средний,малый',
-            'description_hall' => 'nullable|string',
-            'hall_photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'seats_data' => 'required|string', // JSON строка с данными о местах
-        ], [
-            'hall_photo.required' => 'Поле "Фото зала" обязательно для заполнения.',
-            'seats_data.required' => 'Необходимо создать схему зала. Нажмите "Сгенерировать схему" и настройте места.',
-        ]);
-
-        // Дополнительная проверка JSON
-        $seatsData = json_decode($validated['seats_data'], true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($seatsData) || empty($seatsData)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Схема зала не может быть пустой. Создайте хотя бы одно место.');
-        }
-
-        DB::transaction(function () use ($validated, $request, $seatsData) {
-            // Загрузка фото зала
-            $hallPhotoPath = null;
-            if ($request->hasFile('hall_photo')) {
-                $hallPhotoPath = '/images/halls/' . $request->file('hall_photo')->hashName();
-                $request->file('hall_photo')->move(public_path('images/halls'), basename($hallPhotoPath));
-            }
-
-            // Создание зала
-            $hall = Hall::create([
-                'hall_name' => $validated['hall_name'],
-                'type_hall' => $validated['type_hall'],
-                'description_hall' => $validated['description_hall'] ?? null,
-                'hall_photo' => $hallPhotoPath,
-                'quantity_seats' => 0, // Будет обновлено после создания мест
+        try {
+            $validated = $request->validate([
+                'hall_name' => 'required|string|max:255',
+                'type_hall' => 'required|in:большой,средний,малый',
+                'description_hall' => 'nullable|string',
+                'hall_photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+                'seats_data' => 'required|string', // JSON строка с данными о местах
+            ], [
+                'hall_photo.required' => 'Поле "Фото зала" обязательно для заполнения.',
+                'seats_data.required' => 'Необходимо создать схему зала. Нажмите "Сгенерировать схему" и настройте места.',
             ]);
 
-            // Используем уже распарсенные данные о местах
-            $totalSeats = 0;
-
-            // Создаем места
-            foreach ($seatsData as $seat) {
-                if (isset($seat['row_number']) && isset($seat['seat_number'])) {
-                    Seat::create([
-                        'hall_id' => $hall->id_hall,
-                        'row_number' => $seat['row_number'],
-                        'seat_number' => $seat['seat_number'],
-                        'status' => 'Свободно',
-                    ]);
-                    $totalSeats++;
-                }
+            // Дополнительная проверка JSON
+            $seatsData = json_decode($validated['seats_data'], true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($seatsData) || empty($seatsData)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Схема зала не может быть пустой. Создайте хотя бы одно место.');
             }
 
-            // Обновляем количество мест
-            $hall->quantity_seats = $totalSeats;
-            $hall->save();
-        });
+            DB::transaction(function () use ($validated, $request, $seatsData) {
+                // Загрузка фото зала
+                $hallPhotoPath = null;
+                if ($request->hasFile('hall_photo')) {
+                    $hallsDir = public_path('images/halls');
+                    if (!file_exists($hallsDir)) {
+                        mkdir($hallsDir, 0755, true);
+                    }
+                    $hallPhotoPath = '/images/halls/' . $request->file('hall_photo')->hashName();
+                    $request->file('hall_photo')->move($hallsDir, basename($hallPhotoPath));
+                }
 
-        return redirect()->route('admin.halls.index')->with('success', 'Зал добавлен.');
+                // Создание зала
+                $hall = Hall::create([
+                    'hall_name' => $validated['hall_name'],
+                    'type_hall' => $validated['type_hall'],
+                    'description_hall' => $validated['description_hall'] ?? null,
+                    'hall_photo' => $hallPhotoPath,
+                    'quantity_seats' => 0, // Будет обновлено после создания мест
+                ]);
+
+                // Используем уже распарсенные данные о местах
+                $totalSeats = 0;
+
+                // Создаем места
+                foreach ($seatsData as $seat) {
+                    if (isset($seat['row_number']) && isset($seat['seat_number'])) {
+                        Seat::create([
+                            'hall_id' => $hall->id_hall,
+                            'row_number' => $seat['row_number'],
+                            'seat_number' => $seat['seat_number'],
+                            'status' => 'Свободно',
+                        ]);
+                        $totalSeats++;
+                    }
+                }
+
+                // Обновляем количество мест
+                $hall->quantity_seats = $totalSeats;
+                $hall->save();
+            });
+
+            return redirect()->route('admin.halls.index')->with('success', 'Зал добавлен.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', 'Ошибка валидации данных. Проверьте правильность заполнения полей.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Произошла ошибка при добавлении зала: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -93,29 +108,45 @@ class HallController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $hall = Hall::findOrFail($id);
+        try {
+            $hall = Hall::findOrFail($id);
 
-        // Проверяем, есть ли сеансы с этим залом
-        $sessionsCount = Session::where('hall_id', $hall->id_hall)->count();
-        if ($sessionsCount > 0) {
-            return redirect()->route('admin.halls.index')
-                ->with('error', "Невозможно изменить схему зала! На этот зал запланировано {$sessionsCount} сеансов.");
-        }
+            // Проверяем, есть ли сеансы с этим залом
+            $sessionsCount = Session::where('hall_id', $hall->id_hall)->count();
+            if ($sessionsCount > 0) {
+                return redirect()->route('admin.halls.index')
+                    ->with('error', "Невозможно изменить схему зала! На этот зал запланировано {$sessionsCount} сеансов.");
+            }
 
-        // Если у зала нет фото, то фото обязательно
-        $photoRule = $hall->hall_photo ? 'nullable' : 'required';
-        
-        $validated = $request->validate([
-            'hall_name' => 'required|string|max:255',
-            'type_hall' => 'required|in:большой,средний,малый',
-            'description_hall' => 'nullable|string',
-            'hall_photo' => $photoRule . '|image|mimes:jpg,jpeg,png|max:2048',
-            'seats_data' => 'required|json',
-        ], [
-            'hall_photo.required' => 'Поле "Фото зала" обязательно для заполнения.',
-        ]);
+            // Валидация с условными правилами для фото
+            $rules = [
+                'hall_name' => 'required|string|max:255',
+                'type_hall' => 'required|in:большой,средний,малый',
+                'description_hall' => 'nullable|string',
+                'seats_data' => 'required|json',
+            ];
+            
+            // Если у зала нет фото, то фото обязательно
+            if (!$hall->hall_photo) {
+                $rules['hall_photo'] = 'required|image|mimes:jpg,jpeg,png|max:2048';
+            } else {
+                // Если фото есть, то новое фото опционально
+                // Правила image и mimes применяются только если файл действительно загружен
+                if ($request->hasFile('hall_photo')) {
+                    $rules['hall_photo'] = 'image|mimes:jpg,jpeg,png|max:2048';
+                } else {
+                    $rules['hall_photo'] = 'nullable';
+                }
+            }
+            
+            $validated = $request->validate($rules, [
+                'hall_photo.required' => 'Поле "Фото зала" обязательно для заполнения.',
+                'hall_photo.image' => 'Файл должен быть изображением.',
+                'hall_photo.mimes' => 'Фото должно быть в формате: jpg, jpeg, png.',
+                'hall_photo.max' => 'Размер фото не должен превышать 2 МБ.',
+            ]);
 
-        DB::transaction(function () use ($hall, $validated, $request) {
+            DB::transaction(function () use ($hall, $validated, $request) {
             // Загрузка нового фото, если загружено
             if ($request->hasFile('hall_photo')) {
                 // Удаляем старое фото, если есть
@@ -123,8 +154,13 @@ class HallController extends Controller
                     unlink(public_path($hall->hall_photo));
                 }
                 
+                $hallsDir = public_path('images/halls');
+                if (!file_exists($hallsDir)) {
+                    mkdir($hallsDir, 0755, true);
+                }
+                
                 $hallPhotoPath = '/images/halls/' . $request->file('hall_photo')->hashName();
-                $request->file('hall_photo')->move(public_path('images/halls'), basename($hallPhotoPath));
+                $request->file('hall_photo')->move($hallsDir, basename($hallPhotoPath));
                 $hall->hall_photo = $hallPhotoPath;
             }
 
@@ -158,9 +194,21 @@ class HallController extends Controller
             // Обновляем количество мест
             $hall->quantity_seats = $totalSeats;
             $hall->save();
-        });
+            });
 
-        return redirect()->route('admin.halls.index')->with('success', 'Зал обновлён.');
+            return redirect()->route('admin.halls.index')->with('success', 'Зал обновлён.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', 'Ошибка валидации данных. Проверьте правильность заполнения полей.')
+                ->with('editing_hall_id', $id);
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Произошла ошибка при обновлении зала: ' . $e->getMessage())
+                ->with('editing_hall_id', $id);
+        }
     }
 
     /**

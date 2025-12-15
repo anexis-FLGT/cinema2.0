@@ -14,10 +14,14 @@ return new class extends Migration
     {
         // Изменяем тип колонки release_year с YEAR на INTEGER (если она еще YEAR)
         // Проверяем тип колонки перед изменением
-        $columnInfo = DB::select("SHOW COLUMNS FROM `movies` LIKE 'release_year'");
-        if (!empty($columnInfo) && strpos($columnInfo[0]->Type, 'year') !== false) {
-            DB::statement('ALTER TABLE movies MODIFY COLUMN release_year INTEGER NULL');
+        // MySQL-специфичные команды только для MySQL
+        if (DB::getDriverName() === 'mysql') {
+            $columnInfo = DB::select("SHOW COLUMNS FROM `movies` LIKE 'release_year'");
+            if (!empty($columnInfo) && strpos($columnInfo[0]->Type, 'year') !== false) {
+                DB::statement('ALTER TABLE movies MODIFY COLUMN release_year INTEGER NULL');
+            }
         }
+        // Для SQLite и других БД колонка уже должна быть INTEGER из начальной миграции
     }
 
     /**
@@ -26,7 +30,10 @@ return new class extends Migration
     public function down(): void
     {
         // Возвращаем тип YEAR (но это может вызвать проблемы, если есть значения < 1901)
-        DB::statement('ALTER TABLE movies MODIFY COLUMN release_year YEAR NULL');
+        // Только для MySQL
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE movies MODIFY COLUMN release_year YEAR NULL');
+        }
     }
 };
 

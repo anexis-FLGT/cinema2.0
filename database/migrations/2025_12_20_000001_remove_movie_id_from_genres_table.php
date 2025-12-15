@@ -11,11 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('genres', function (Blueprint $table) {
-            // Удаляем внешний ключ
-            $table->dropForeign(['movie_id']);
-            // Удаляем индекс
-            $table->dropIndex(['movie_id']);
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        
+        Schema::table('genres', function (Blueprint $table) use ($driver) {
+            // Удаляем внешний ключ (только для MySQL)
+            if ($driver !== 'sqlite') {
+                try {
+                    $table->dropForeign(['movie_id']);
+                } catch (\Exception $e) {
+                    // Игнорируем ошибку, если внешний ключ не существует
+                }
+            }
+            
+            // Удаляем индекс (только для MySQL, в SQLite индекс не создается отдельно)
+            if ($driver !== 'sqlite') {
+                try {
+                    $table->dropIndex(['movie_id']);
+                } catch (\Exception $e) {
+                    // Игнорируем ошибку, если индекс не существует
+                }
+            }
+            
             // Удаляем колонку
             $table->dropColumn('movie_id');
         });
@@ -26,9 +42,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('genres', function (Blueprint $table) {
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        
+        Schema::table('genres', function (Blueprint $table) use ($driver) {
             // Восстанавливаем колонку (временно, для отката)
-            $table->foreignId('movie_id')->nullable()->after('genre_name');
+            if ($driver !== 'sqlite') {
+                $table->foreignId('movie_id')->nullable()->after('genre_name');
+            } else {
+                $table->foreignId('movie_id')->nullable();
+            }
             $table->foreign('movie_id')->references('id_movie')->on('movies');
             $table->index('movie_id');
         });

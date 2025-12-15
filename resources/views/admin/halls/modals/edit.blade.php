@@ -2,7 +2,7 @@
 <div class="modal fade" id="editHallModal{{ $hall->id_hall }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-height: 90vh; margin: 1.75rem auto;">
         <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
-            <form action="{{ route('admin.halls.update', $hall->id_hall) }}" method="POST" id="editHallForm{{ $hall->id_hall }}" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+            <form action="{{ route('admin.halls.update', $hall->id_hall) }}" method="POST" id="editHallForm{{ $hall->id_hall }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
                 @csrf
                 @method('PUT')
                 <div class="modal-header" style="flex-shrink: 0;">
@@ -10,20 +10,45 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto; flex: 1; min-height: 0;">
+                    {{-- Сообщения об ошибках --}}
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     {{-- Основная информация --}}
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Название зала <span class="text-danger">*</span></label>
-                            <input type="text" name="hall_name" class="form-control" value="{{ old('hall_name', $hall->hall_name) }}" required>
+                            <input type="text" name="hall_name" class="form-control @error('hall_name') is-invalid @enderror" value="{{ old('hall_name', $hall->hall_name) }}" required>
+                            @error('hall_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Тип зала <span class="text-danger">*</span></label>
-                            <select name="type_hall" class="form-select" required>
+                            <select name="type_hall" class="form-select @error('type_hall') is-invalid @enderror" required>
                                 <option value="">Выберите тип зала</option>
                                 <option value="большой" {{ old('type_hall', $hall->type_hall) == 'большой' ? 'selected' : '' }}>Большой</option>
                                 <option value="средний" {{ old('type_hall', $hall->type_hall) == 'средний' ? 'selected' : '' }}>Средний</option>
                                 <option value="малый" {{ old('type_hall', $hall->type_hall) == 'малый' ? 'selected' : '' }}>Малый</option>
                             </select>
+                            @error('type_hall')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="row mb-4">
@@ -40,7 +65,10 @@
                                     <img src="{{ asset($hall->hall_photo) }}" alt="Фото зала" style="max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 5px;">
                                 </div>
                             @endif
-                            <input type="file" name="hall_photo" class="form-control" accept="image/*" {{ !$hall->hall_photo ? 'required' : '' }}>
+                            <input type="file" name="hall_photo" class="form-control @error('hall_photo') is-invalid @enderror" accept="image/*" {{ !$hall->hall_photo ? 'required' : '' }}>
+                            @error('hall_photo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                             @if($hall->hall_photo)
                                 <small class="text-muted">Оставьте пустым, чтобы сохранить текущее фото</small>
                             @endif

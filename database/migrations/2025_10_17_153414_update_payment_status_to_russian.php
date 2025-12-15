@@ -12,8 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Сначала изменяем enum на новые значения (временно добавляем русские значения)
-        DB::statement("ALTER TABLE `bookings` MODIFY COLUMN `payment_status` ENUM('pending', 'succeeded', 'canceled', 'waiting_for_capture', 'ожидание', 'оплачено', 'отменено', 'ожидает_подтверждения') DEFAULT 'ожидание'");
+        // Проверяем тип базы данных
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            // Для MySQL изменяем enum на новые значения (временно добавляем русские значения)
+            DB::statement("ALTER TABLE `bookings` MODIFY COLUMN `payment_status` ENUM('pending', 'succeeded', 'canceled', 'waiting_for_capture', 'ожидание', 'оплачено', 'отменено', 'ожидает_подтверждения') DEFAULT 'ожидание'");
+        }
 
         // Обновляем существующие значения статусов на русские
         DB::table('bookings')
@@ -32,8 +37,11 @@ return new class extends Migration
             ->where('payment_status', 'waiting_for_capture')
             ->update(['payment_status' => 'ожидает_подтверждения']);
 
-        // Теперь удаляем английские значения из enum
-        DB::statement("ALTER TABLE `bookings` MODIFY COLUMN `payment_status` ENUM('ожидание', 'оплачено', 'отменено', 'ожидает_подтверждения') DEFAULT 'ожидание'");
+        if ($driver === 'mysql') {
+            // Для MySQL удаляем английские значения из enum
+            DB::statement("ALTER TABLE `bookings` MODIFY COLUMN `payment_status` ENUM('ожидание', 'оплачено', 'отменено', 'ожидает_подтверждения') DEFAULT 'ожидание'");
+        }
+        // Для SQLite enum не поддерживается, поэтому просто обновляем данные
     }
 
     /**
@@ -58,7 +66,13 @@ return new class extends Migration
             ->where('payment_status', 'ожидает_подтверждения')
             ->update(['payment_status' => 'waiting_for_capture']);
 
-        DB::statement("ALTER TABLE `bookings` MODIFY COLUMN `payment_status` ENUM('pending', 'succeeded', 'canceled', 'waiting_for_capture') DEFAULT 'pending'");
+        // Проверяем тип базы данных
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE `bookings` MODIFY COLUMN `payment_status` ENUM('pending', 'succeeded', 'canceled', 'waiting_for_capture') DEFAULT 'pending'");
+        }
+        // Для SQLite enum не поддерживается, поэтому просто обновляем данные
     }
 };
 
