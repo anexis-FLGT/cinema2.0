@@ -115,109 +115,121 @@
         </form>
     </div>
 
-    {{-- Таблица истории --}}
+    {{-- Группировка по пользователю и дате (как в личном кабинете) --}}
     <div class="card shadow-sm border-0 p-4 rounded-4">
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-info">
-                    <tr>
-                        <th>ID</th>
-                        <th>Дата создания</th>
-                        <th>Пользователь</th>
-                        <th>Фильм</th>
-                        <th>Сеанс</th>
-                        <th>Зал</th>
-                        <th>Место</th>
-                        <th>Статус платежа</th>
-                        <th>Сумма</th>
-                        <th class="text-center">Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($bookings as $booking)
-                        <tr>
-                            <td>{{ $booking->id_booking }}</td>
-                            <td>
-                                @if($booking->created_ad)
-                                    {{ \Carbon\Carbon::parse($booking->created_ad)->locale('ru')->isoFormat('D MMM YYYY, HH:mm') }}
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->user)
-                                    {{ $booking->user->last_name }} {{ $booking->user->first_name }} {{ $booking->user->middle_name ?? '' }}
-                                @else
-                                    <span class="text-muted">Пользователь удалён</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->session && $booking->session->movie)
-                                    {{ $booking->session->movie->movie_title }}
-                                @else
-                                    <span class="text-muted">Фильм удалён</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->session)
-                                    {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY, HH:mm') }}
-                                @else
-                                    <span class="text-muted">Сеанс удалён</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->session && $booking->session->hall)
-                                    {{ $booking->session->hall->hall_name }}
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->seat)
-                                    Ряд {{ $booking->seat->row_number }}, Место {{ $booking->seat->seat_number }}
-                                @else
-                                    <span class="text-muted">Место удалено</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->payment)
-                                    @if($booking->payment->payment_status === 'оплачено')
-                                        <span class="badge bg-success">Оплачено</span>
-                                    @elseif($booking->payment->payment_status === 'ожидание')
-                                        <span class="badge bg-warning">Ожидание</span>
-                                    @elseif($booking->payment->payment_status === 'отменено')
-                                        <span class="badge bg-danger">Отменено</span>
-                                    @elseif($booking->payment->payment_status === 'ожидает_подтверждения')
-                                        <span class="badge bg-info">Ожидает подтверждения</span>
-                                    @else
-                                        <span class="badge bg-secondary">{{ $booking->payment->payment_status }}</span>
-                                    @endif
-                                @else
-                                    <span class="badge bg-secondary">Нет платежа</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->payment && $booking->payment->amount)
-                                    <strong>{{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽</strong>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                <a href="{{ route('admin.history.show', $booking->id_booking) }}" class="btn btn-sm btn-outline-info" title="Подробнее">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
-                                <i class="bi bi-info-circle me-1"></i> Бронирования не найдены
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div class="accordion" id="historyAccordion">
+            @forelse($groupedBookings as $userKey => $group)
+                @php
+                    $user = $group['user'];
+                    $userName = $user
+                        ? trim(($user->last_name ?? '') . ' ' . ($user->first_name ?? '') . ' ' . ($user->middle_name ?? ''))
+                        : 'Пользователь удалён';
+                    $userAccordionId = 'user_' . $userKey;
+                    $totalUserBookings = $group['dates']->sum(fn($dateGroup) => $dateGroup->count());
+                @endphp
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header" id="heading{{ $userAccordionId }}">
+                        <button class="accordion-button @if(!$loop->first) collapsed @endif" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $userAccordionId }}" aria-expanded="{{ $loop->first ? 'true' : 'false' }}" aria-controls="collapse{{ $userAccordionId }}">
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">{{ $userName ?: 'Без имени' }}</span>
+                                <small class="text-muted">{{ $totalUserBookings }} операций</small>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ $userAccordionId }}" class="accordion-collapse collapse @if($loop->first) show @endif" aria-labelledby="heading{{ $userAccordionId }}" data-bs-parent="#historyAccordion">
+                        <div class="accordion-body">
+                            <div class="accordion" id="datesAccordion{{ $userAccordionId }}">
+                                @foreach($group['dates'] as $dateKey => $bookingsByDate)
+                                    @php
+                                        $dateAccordionId = $userAccordionId . '_' . str_replace(['-', ':'], '', $dateKey);
+                                        $dateTitle = $dateKey === 'unknown_date'
+                                            ? 'Без даты'
+                                            : \Carbon\Carbon::parse($dateKey)->locale('ru')->isoFormat('D MMMM YYYY');
+                                    @endphp
+                                    <div class="accordion-item mb-2">
+                                        <h2 class="accordion-header" id="heading{{ $dateAccordionId }}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $dateAccordionId }}" aria-expanded="false" aria-controls="collapse{{ $dateAccordionId }}">
+                                                <div class="d-flex flex-column">
+                                                    <span>{{ $dateTitle }}</span>
+                                                    <small class="text-muted">{{ $bookingsByDate->count() }} операций</small>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ $dateAccordionId }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $dateAccordionId }}" data-bs-parent="#datesAccordion{{ $userAccordionId }}">
+                                            <div class="accordion-body p-0">
+                                                <div class="list-group list-group-flush">
+                                                    @foreach($bookingsByDate as $booking)
+                                                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                                                            <div class="me-3">
+                                                                <div class="fw-semibold">
+                                                                    {{ $booking->session && $booking->session->movie ? $booking->session->movie->movie_title : 'Фильм не найден' }}
+                                                                </div>
+                                                                <div class="text-muted small">
+                                                                    Сеанс:
+                                                                    @if($booking->session && $booking->session->date_time_session)
+                                                                        {{ \Carbon\Carbon::parse($booking->session->date_time_session)->locale('ru')->isoFormat('D MMM YYYY, HH:mm') }}
+                                                                    @else
+                                                                        <span class="text-muted">—</span>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="text-muted small">
+                                                                    Зал: {{ $booking->session && $booking->session->hall ? $booking->session->hall->hall_name : '—' }} |
+                                                                    Место: {{ $booking->seat ? 'Ряд ' . $booking->seat->row_number . ', Место ' . $booking->seat->seat_number : '—' }}
+                                                                </div>
+                                                                <div class="text-muted small">
+                                                                    Создано:
+                                                                    @if($booking->created_ad)
+                                                                        {{ \Carbon\Carbon::parse($booking->created_ad)->locale('ru')->isoFormat('D MMM YYYY, HH:mm') }}
+                                                                    @else
+                                                                        <span class="text-muted">—</span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                @if($booking->payment)
+                                                                    @if($booking->payment->payment_status === 'оплачено')
+                                                                        <span class="badge bg-success">Оплачено</span>
+                                                                    @elseif($booking->payment->payment_status === 'ожидание')
+                                                                        <span class="badge bg-warning">Ожидание</span>
+                                                                    @elseif($booking->payment->payment_status === 'отменено')
+                                                                        <span class="badge bg-danger">Отменено</span>
+                                                                    @elseif($booking->payment->payment_status === 'ожидает_подтверждения')
+                                                                        <span class="badge bg-info">Ожидает подтверждения</span>
+                                                                    @else
+                                                                        <span class="badge bg-secondary">{{ $booking->payment->payment_status }}</span>
+                                                                    @endif
+                                                                @else
+                                                                    <span class="badge bg-secondary">Нет платежа</span>
+                                                                @endif
+                                                                <div class="fw-semibold mt-2">
+                                                                    @if($booking->payment && $booking->payment->amount)
+                                                                        {{ number_format($booking->payment->amount, 0, ',', ' ') }} ₽
+                                                                    @else
+                                                                        <span class="text-muted">—</span>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <a href="{{ route('admin.history.show', $booking->id_booking) }}" class="btn btn-sm btn-outline-info">
+                                                                        <i class="bi bi-eye"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-info-circle me-1"></i> Бронирования не найдены
+                </div>
+            @endforelse
         </div>
 
         {{-- Пагинация --}}
@@ -265,6 +277,39 @@
     
     [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
         filter: invert(1);
+    }
+
+    /* Dark theme for grouped accordion */
+    [data-theme="dark"] .accordion-button {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+
+    [data-theme="dark"] .accordion-button:not(.collapsed) {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        box-shadow: none;
+    }
+
+    [data-theme="dark"] .accordion-item {
+        background-color: var(--bg-primary);
+        border-color: var(--border-color);
+    }
+
+    [data-theme="dark"] .accordion-body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .list-group-item {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+
+    [data-theme="dark"] .list-group-item .text-muted {
+        color: #adb5bd !important;
     }
 </style>
 @endsection

@@ -67,7 +67,6 @@
             <table class="table align-middle">
                 <thead class="table-info">
                     <tr>
-                        <th>№</th>
                         <th>Фамилия</th>
                         <th>Имя</th>
                         <th>Телефон</th>
@@ -79,7 +78,6 @@
                 <tbody>
                     @forelse($users as $user)
                         <tr>
-                            <td>{{ $user->id_user }}</td>
                             <td>{{ $user->last_name }}</td>
                             <td>{{ $user->first_name }}</td>
                             <td>{{ $user->phone ?? '—' }}</td>
@@ -218,7 +216,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 <i class="bi bi-info-circle me-1"></i> Пользователи пока не добавлены
                             </td>
                         </tr>

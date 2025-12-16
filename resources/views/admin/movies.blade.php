@@ -66,7 +66,6 @@
             <table class="table align-middle">
                 <thead class="table-primary">
                     <tr>
-                        <th>№</th>
                         <th>Название</th>
                         <th>Длительность</th>
                         <th>Возраст</th>
@@ -78,7 +77,6 @@
                 <tbody>
                     @forelse ($movies as $movie)
                         <tr>
-                            <td>{{ $movie->id_movie }}</td>
                             <td>{{ $movie->movie_title }}</td>
                             <td>{{ $movie->duration }}</td>
                             <td>{{ $movie->age_limit }}</td>
@@ -225,7 +223,7 @@
 
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 <i class="bi bi-info-circle me-1"></i> Пока фильмов нет
                             </td>
                         </tr>

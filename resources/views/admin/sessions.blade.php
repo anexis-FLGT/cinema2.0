@@ -77,7 +77,6 @@
             <table class="table align-middle">
                 <thead class="table-success">
                     <tr>
-                        <th>№</th>
                         <th>Фильм</th>
                         <th>Дата и время</th>
                         <th>Зал</th>
@@ -87,7 +86,6 @@
                 <tbody>
                     @forelse ($sessions as $session)
                         <tr>
-                            <td>{{ $session->id_session }}</td>
                             <td>{{ $session->movie->movie_title ?? '—' }}</td>
                             <td>{{ \Carbon\Carbon::parse($session->date_time_session)->locale('ru')->isoFormat('D MMMM YYYY, HH:mm') }}</td>
                             <td>{{ $session->hall->hall_name ?? '—' }}</td>
@@ -217,7 +215,7 @@
 
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="4" class="text-center text-muted py-4">
                                 <i class="bi bi-info-circle me-1"></i> Сеансы пока не добавлены
                             </td>
                         </tr>

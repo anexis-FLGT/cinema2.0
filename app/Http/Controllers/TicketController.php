@@ -15,36 +15,46 @@ class TicketController extends Controller
     public function generatePdf($bookingId)
     {
         $user = Auth::user();
-        
-        // Получаем бронирование с необходимыми связями
-        $booking = Booking::with(['session.movie', 'session.hall', 'seat', 'user', 'payment'])
-            ->where('id_booking', $bookingId)
-            ->where('user_id', $user->id_user)
-            ->firstOrFail();
 
-        // Проверяем, что билет оплачен
-        if (!$booking->payment || $booking->payment->payment_status !== 'оплачено') {
-            return redirect()->route('user.dashboard')
-                ->with('error', 'Билет должен быть оплачен для печати.');
+        // Поддержка списка id через запятую
+        $ids = collect(explode(',', (string) $bookingId))
+            ->filter(fn($id) => ctype_digit(trim($id)))
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            abort(404);
+        }
+        
+        // Получаем бронирования пользователя
+        $bookings = Booking::with(['session.movie', 'session.hall', 'seat', 'user', 'payment'])
+            ->whereIn('id_booking', $ids)
+            ->where('user_id', $user->id_user)
+            ->get();
+
+        // Проверяем, что все бронирования найдены
+        if ($bookings->count() !== $ids->count()) {
+            abort(404);
         }
 
-        // Данные для билета
-        $ticketData = [
-            'booking' => $booking,
-            'movie' => $booking->session->movie,
-            'session' => $booking->session,
-            'hall' => $booking->session->hall,
-            'seat' => $booking->seat,
-            'user' => $booking->user,
-            'payment' => $booking->payment,
-            'bookingId' => str_pad($booking->id_booking, 8, '0', STR_PAD_LEFT),
-        ];
+        // Проверяем оплату для каждого билета
+        $unpaid = $bookings->filter(function($booking) {
+            return !$booking->payment || $booking->payment->payment_status !== 'оплачено';
+        });
 
-        // Генерируем PDF
-        $pdf = PDF::loadView('tickets.pdf', $ticketData);
+        if ($unpaid->isNotEmpty()) {
+            return redirect()->route('user.dashboard')
+                ->with('error', 'Все билеты должны быть оплачены для печати.');
+        }
+
+        // Генерируем PDF с несколькими билетами
+        $pdf = PDF::loadView('tickets.pdf', [
+            'bookings' => $bookings,
+        ]);
         
         // Имя файла
-        $filename = 'ticket_' . $booking->id_booking . '_' . date('YmdHis') . '.pdf';
+        $filename = 'tickets_' . $ids->implode('_') . '_' . date('YmdHis') . '.pdf';
         
         // Возвращаем PDF для скачивания
         return $pdf->download($filename);

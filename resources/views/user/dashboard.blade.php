@@ -93,6 +93,52 @@
                                 </h2>
                                 <div id="collapse{{ $loop->index }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" aria-labelledby="heading{{ $loop->index }}" data-bs-parent="#activeBookingsAccordion">
                                     <div class="accordion-body" style="background-color: var(--bg-primary);">
+                                        @php
+                                            $pendingBooking = $bookingsGroup->first(function($b) {
+                                                return $b->payment && $b->payment->payment_status === 'ожидание';
+                                            });
+                                            $printableBooking = $bookingsGroup->first(function($b) {
+                                                return $b->payment && $b->payment->payment_status === 'оплачено';
+                                            });
+                                            $printableIds = $bookingsGroup->filter(function($b) {
+                                                return $b->payment && $b->payment->payment_status === 'оплачено';
+                                            })->pluck('id_booking')->values();
+                                            $printableUrl = $printableIds->isNotEmpty()
+                                                ? route('user.ticket.pdf', $printableIds->implode(','))
+                                                : null;
+                                        @endphp
+
+                                        <div class="d-flex justify-content-end gap-2 mb-3">
+                                            @if($pendingBooking)
+                                                <a href="{{ route('payment.retry', $pendingBooking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;">
+                                                    <i class="bi bi-credit-card me-1"></i>Оплатить билеты
+                                                </a>
+                                            @endif
+                                            @if($printableUrl)
+                                                <button type="button"
+                                                    class="btn-ticket-print"
+                                                    data-print-url="{{ $printableUrl }}"
+                                                    onclick="printGroup(this)">
+                                                    <i class="bi bi-file-earmark-pdf me-1"></i>Распечатать все билеты
+                                                </button>
+                                            @endif
+                                            @php
+                                                $cancelIds = $bookingsGroup->pluck('id_booking')->implode(',');
+                                                $cancelUrl = route('user.booking.cancel', $cancelIds);
+                                            @endphp
+                                            <form method="POST"
+                                                  action="{{ $cancelUrl }}"
+                                                  onsubmit="return confirm('Отменить все билеты для этого сеанса? Места будут освобождены.');"
+                                                  class="d-inline">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="btn-netflix-danger"
+                                                        title="Отменить все билеты в этом сеансе">
+                                                    <i class="bi bi-x-circle me-1"></i>Отменить все
+                                                </button>
+                                            </form>
+                                        </div>
+
                                         <div class="row g-2">
                                             @foreach($bookingsGroup as $booking)
                                                 <div class="col-12 col-md-6 col-lg-4">
@@ -140,23 +186,10 @@
 
                                                         <div class="d-flex justify-content-end align-items-center pt-2" style="border-top: 1px solid var(--border-secondary);">
                                                             <div class="d-flex gap-2">
-                                                                @if($booking->payment && $booking->payment->payment_status === 'оплачено')
-                                                                    <a href="{{ route('user.ticket.pdf', $booking->id_booking) }}" class="btn-ticket-print" style="text-decoration: none;" target="_blank">
-                                                                        <i class="bi bi-file-earmark-pdf me-1"></i>Печать билета
-                                                                    </a>
-                                                                @endif
-                                                                @if($booking->payment && $booking->payment->payment_status === 'ожидание')
-                                                                    <a href="{{ route('payment.retry', $booking->id_booking) }}" class="btn-netflix-primary" style="text-decoration: none;">
-                                                                        <i class="bi bi-credit-card me-1"></i>Оплатить
-                                                                    </a>
-                                                                @endif
                                                                 @if($booking->payment && ($booking->payment->payment_status === 'оплачено' || $booking->payment->payment_status === 'ожидание' || $booking->payment->payment_status === 'ожидает_подтверждения'))
-                                                                    <form action="{{ route('user.booking.cancel', $booking->id_booking) }}" method="POST" class="d-inline">
+                                                                    {{-- Скрытая форма для групповой отмены --}}
+                                                                    <form action="{{ route('user.booking.cancel', $booking->id_booking) }}" method="POST" class="d-none cancel-form cancel-form-{{ $accordionId }}" data-booking-id="{{ $booking->id_booking }}">
                                                                         @csrf
-                                                                        <button type="submit" class="btn-netflix-danger" 
-                                                                                onclick="return confirm('Вы уверены, что хотите отменить бронирование? Место будет освобождено.')">
-                                                                            <i class="bi bi-x-circle me-1"></i>Отменить
-                                                                        </button>
                                                                     </form>
                                                                 @endif
                                                             </div>
@@ -277,6 +310,14 @@ function togglePassword(id, el) {
         input.type = "password";
         el.classList.replace('bi-eye-slash', 'bi-eye');
     }
+}
+
+// Групповая печать оплаченных билетов (открывает общий PDF)
+function printGroup(buttonEl) {
+    if (!buttonEl) return;
+    const url = buttonEl.getAttribute('data-print-url');
+    if (!url) return;
+    window.open(url, '_blank');
 }
 
 // === Маска телефона ===

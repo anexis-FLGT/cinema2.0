@@ -33,7 +33,6 @@
             <table class="table align-middle">
                 <thead class="table-info">
                     <tr>
-                        <th>№</th>
                         <th>Название жанра</th>
                         <th>Количество фильмов</th>
                         <th class="text-center">Действия</th>
@@ -42,7 +41,6 @@
                 <tbody>
                     @forelse($genres as $genre)
                         <tr>
-                            <td>{{ $genre->id_genre }}</td>
                             <td>{{ $genre->genre_name }}</td>
                             <td>{{ $genre->movies_count }}</td>
                             <td class="text-center">
@@ -115,7 +113,7 @@
                         </div>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center py-4">
+                            <td colspan="3" class="text-center py-4">
                                 <p class="text-muted mb-0">Жанры не найдены</p>
                             </td>
                         </tr>

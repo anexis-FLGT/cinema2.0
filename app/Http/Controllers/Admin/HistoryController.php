@@ -54,6 +54,22 @@ class HistoryController extends Controller
         // Пагинация
         $bookings = $query->paginate(20)->withQueryString();
 
+        // Группировка для удобного отображения (по пользователю и дате)
+        $groupedBookings = $bookings->getCollection()
+            ->groupBy(function ($booking) {
+                return $booking->user_id ?? 'deleted_user';
+            })
+            ->map(function ($userGroup) {
+                return [
+                    'user' => $userGroup->first()->user,
+                    'dates' => $userGroup->groupBy(function ($booking) {
+                        return $booking->created_ad
+                            ? Carbon::parse($booking->created_ad)->format('Y-m-d')
+                            : 'unknown_date';
+                    })->sortKeysDesc(),
+                ];
+            });
+
         // Получаем всех пользователей для фильтра
         $users = User::orderBy('last_name')->get();
 
@@ -64,7 +80,16 @@ class HistoryController extends Controller
         $paidBookings = Payment::where('payment_status', 'оплачено')->count();
         $cancelledBookings = Payment::where('payment_status', 'отменено')->count();
 
-        return view('admin.history.index', compact('bookings', 'users', 'totalBookings', 'totalPayments', 'totalRevenue', 'paidBookings', 'cancelledBookings'));
+        return view('admin.history.index', compact(
+            'bookings',
+            'groupedBookings',
+            'users',
+            'totalBookings',
+            'totalPayments',
+            'totalRevenue',
+            'paidBookings',
+            'cancelledBookings'
+        ));
     }
 
     /**

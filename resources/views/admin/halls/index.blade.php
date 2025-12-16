@@ -33,7 +33,6 @@
             <table class="table align-middle">
                 <thead class="table-warning">
                     <tr>
-                        <th>№</th>
                         <th>Название</th>
                         <th>Тип</th>
                         <th>Количество мест</th>
@@ -44,7 +43,6 @@
                 <tbody>
                     @forelse ($halls as $hall)
                         <tr>
-                            <td>{{ $hall->id_hall }}</td>
                             <td>{{ $hall->hall_name }}</td>
                             <td>{{ $hall->type_hall }}</td>
                             <td>{{ $hall->seats_count ?? 0 }}</td>
@@ -97,7 +95,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="5" class="text-center text-muted py-4">
                                 <i class="bi bi-info-circle me-1"></i> Залы пока не добавлены
                             </td>
                         </tr>

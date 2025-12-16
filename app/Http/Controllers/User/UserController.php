@@ -41,7 +41,7 @@ class UserController extends Controller
             ->select('bookings.*');
         
         // Пагинация для активных бронирований
-        $activeBookings = $activeBookingsQuery->paginate(6, ['*'], 'active_page');
+        $activeBookings = $activeBookingsQuery->paginate(7, ['*'], 'active_page');
         
         // Группировка активных бронирований по дате и времени сеанса
         $activeBookingsGrouped = $activeBookings->getCollection()->groupBy(function($booking) {
@@ -79,7 +79,7 @@ class UserController extends Controller
             ->select('bookings.*');
         
         // Пагинация для истории
-        $historyBookings = $historyBookingsQuery->paginate(10);
+        $historyBookings = $historyBookingsQuery->paginate(7);
         
         // Группировка истории по дате и времени сеанса
         $historyBookingsGrouped = $historyBookings->getCollection()->groupBy(function($booking) {
@@ -192,36 +192,52 @@ class UserController extends Controller
     public function cancelBooking(Request $request, $bookingId)
     {
         $user = Auth::user();
-        
-        // Находим бронирование
-        $booking = Booking::with('seat')->findOrFail($bookingId);
-        
-        // Проверяем, что бронирование принадлежит текущему пользователю
-        if ($booking->user_id != $user->id_user) {
+
+        // Поддержка списка id через запятую
+        $ids = collect(explode(',', (string) $bookingId))
+            ->filter(fn($id) => ctype_digit(trim($id)))
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
             return redirect()->route('user.dashboard')
-                ->with('error', 'У вас нет прав для отмены этого бронирования');
+                ->with('error', 'Некорректные идентификаторы бронирований.');
         }
         
-        // Проверяем, что бронирование не отменено
-        $payment = $booking->payment;
-        if (!$payment) {
+        // Получаем бронирования с платежами
+        $bookings = Booking::with('payment')
+            ->whereIn('id_booking', $ids)
+            ->where('user_id', $user->id_user)
+            ->get();
+
+        // Проверяем, что все бронирования принадлежат пользователю
+        if ($bookings->count() !== $ids->count()) {
             return redirect()->route('user.dashboard')
-                ->with('error', 'Платеж для бронирования не найден');
+                ->with('error', 'Некоторые бронирования не найдены или не принадлежат вам.');
         }
-        
-        if ($payment->payment_status === 'отменено') {
+
+        // Проверяем наличие и статус платежей
+        $missingPayments = $bookings->filter(fn($b) => !$b->payment);
+        if ($missingPayments->isNotEmpty()) {
             return redirect()->route('user.dashboard')
-                ->with('error', 'Бронирование уже отменено');
+                ->with('error', 'Для некоторых бронирований не найден платеж.');
         }
-        
-        // Обновляем статус платежа
-        $payment->payment_status = 'отменено';
-        $payment->save();
-        
-        // НЕ меняем статус места - забронированность определяется только по bookings для конкретного session_id
-        // Место может быть забронировано на другие сеансы, поэтому не нужно менять его статус
-        
+
+        // Отменяем все платежи
+        foreach ($bookings as $booking) {
+            if ($booking->payment->payment_status !== 'отменено') {
+                $booking->payment->payment_status = 'отменено';
+                $booking->payment->save();
+            }
+        }
+
+        // Если запрос AJAX/fetch — возвращаем JSON
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
         return redirect()->route('user.dashboard')
-            ->with('success', 'Бронирование успешно отменено. Место освобождено.');
+            ->with('success', 'Все выбранные бронирования отменены. Места освобождены.');
     }
 }
