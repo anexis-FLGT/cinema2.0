@@ -45,16 +45,20 @@
             {{-- Детали фильма --}}
             <div class="mb-4" style="background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
                 <div class="row g-3">
-                    @if($movie->director)
+                    @php
+                        $directorsText = $movie->directors?->pluck('name')->join(', ');
+                        $producersText = $movie->producers?->pluck('name')->join(', ');
+                    @endphp
+                    @if($directorsText)
                     <div class="col-12 col-sm-6">
-                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.25rem;">Режиссер</div>
-                        <div style="font-weight: 500;">{{ $movie->director }}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.25rem;">Режиссёр</div>
+                        <div style="font-weight: 500;">{{ $directorsText }}</div>
                     </div>
                     @endif
-                    @if($movie->producer)
+                    @if($producersText)
                     <div class="col-12 col-sm-6">
                         <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.25rem;">Продюсер</div>
-                        <div style="font-weight: 500;">{{ $movie->producer }}</div>
+                        <div style="font-weight: 500;">{{ $producersText }}</div>
                     </div>
                     @endif
                 </div>

@@ -87,7 +87,12 @@
                                     —
                                 @endif
                             </td>
-                            <td>{{ $movie->producer }}</td>
+                            <td>
+                                @php
+                                    $producersText = $movie->producers?->pluck('name')->join(', ');
+                                @endphp
+                                {{ $producersText ?: '—' }}
+                            </td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editMovieModal{{ $movie->id_movie }}">
                                     <i class="bi bi-pencil"></i>
@@ -144,18 +149,51 @@
                                         </div>
                                         <div class="modal-body">
                                             <div class="row g-3">
-                                                <div class="col-md-6">
+                                                <div class="col-12">
                                                     <label class="form-label">Название <span class="text-danger">*</span></label>
                                                     <input type="text" name="movie_title" class="form-control" value="{{ $movie->movie_title }}" required>
                                                 </div>
+                                                
                                                 <div class="col-md-6">
-                                                    <label class="form-label">Режиссер <span class="text-danger">*</span></label>
-                                                    <input type="text" name="director" class="form-control" value="{{ $movie->director }}" required>
+                                                    <label class="form-label">Режиссёры <span class="text-danger">*</span></label>
+                                                    <div class="directors-checkbox-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--input-bg);">
+                                                        @foreach($allDirectors as $director)
+                                                            <label class="form-check mb-2 director-item" for="edit_director_{{ $movie->id_movie }}_{{ $director->id_director }}" style="display: block; cursor: pointer; padding: 8px; margin: 0 -8px; border-radius: 4px;">
+                                                                <input class="form-check-input director-checkbox" type="checkbox" name="directors[]" value="{{ $director->id_director }}" id="edit_director_{{ $movie->id_movie }}_{{ $director->id_director }}" {{ $movie->directors->contains('id_director', $director->id_director) ? 'checked' : '' }}>
+                                                                <span class="form-check-label">
+                                                                    {{ $director->name }}
+                                                                </span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                    <small class="text-muted d-block mt-1">Выберите одного или нескольких режиссёров</small>
+                                                    <label class="form-label mt-2">Новые режиссёры (через запятую)</label>
+                                                    <input type="text" name="new_directors" class="form-control">
+                                                    @error('directors')
+                                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
+                                                
                                                 <div class="col-md-6">
-                                                    <label class="form-label">Продюсер <span class="text-danger">*</span></label>
-                                                    <input type="text" name="producer" class="form-control" value="{{ $movie->producer }}" required>
+                                                    <label class="form-label">Продюсеры <span class="text-danger">*</span></label>
+                                                    <div class="producers-checkbox-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--input-bg);">
+                                                        @foreach($allProducers as $producer)
+                                                            <label class="form-check mb-2 producer-item" for="edit_producer_{{ $movie->id_movie }}_{{ $producer->id_producer }}" style="display: block; cursor: pointer; padding: 8px; margin: 0 -8px; border-radius: 4px;">
+                                                                <input class="form-check-input producer-checkbox" type="checkbox" name="producers[]" value="{{ $producer->id_producer }}" id="edit_producer_{{ $movie->id_movie }}_{{ $producer->id_producer }}" {{ $movie->producers->contains('id_producer', $producer->id_producer) ? 'checked' : '' }}>
+                                                                <span class="form-check-label">
+                                                                    {{ $producer->name }}
+                                                                </span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                    <small class="text-muted d-block mt-1">Выберите одного или нескольких продюсеров</small>
+                                                    <label class="form-label mt-2">Новые продюсеры (через запятую)</label>
+                                                    <input type="text" name="new_producers" class="form-control">
+                                                    @error('producers')
+                                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
+                                                
                                                 <div class="col-md-4">
                                                     <label class="form-label">Длительность <span class="text-danger">*</span></label>
                                                     <input type="text" name="duration" class="form-control duration-input" value="{{ $movie->duration }}" required>
@@ -253,27 +291,56 @@
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-12">
               <label class="form-label">Название <span class="text-danger">*</span></label>
               <input type="text" name="movie_title" class="form-control @error('movie_title') is-invalid @enderror" value="{{ old('movie_title') }}" required>
               @error('movie_title')
                   <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
+            
             <div class="col-md-6">
-              <label class="form-label">Режиссер <span class="text-danger">*</span></label>
-              <input type="text" name="director" class="form-control @error('director') is-invalid @enderror" value="{{ old('director') }}" required>
-              @error('director')
-                  <div class="invalid-feedback">{{ $message }}</div>
+              <label class="form-label">Режиссёры <span class="text-danger">*</span></label>
+              <div class="directors-checkbox-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--input-bg);">
+                @foreach($allDirectors as $director)
+                    <label class="form-check mb-2 director-item" for="director_{{ $director->id_director }}" style="display: block; cursor: pointer; padding: 8px; margin: 0 -8px; border-radius: 4px;">
+                        <input class="form-check-input director-checkbox" type="checkbox" name="directors[]" value="{{ $director->id_director }}" id="director_{{ $director->id_director }}"
+                            @if(collect(old('directors', []))->contains($director->id_director)) checked @endif>
+                        <span class="form-check-label">
+                            {{ $director->name }}
+                        </span>
+                    </label>
+                @endforeach
+              </div>
+              <small class="text-muted d-block mt-1">Выберите одного или нескольких режиссёров</small>
+              <label class="form-label mt-2">Новые режиссёры (через запятую)</label>
+              <input type="text" name="new_directors" class="form-control" value="{{ old('new_directors') }}" >
+              @error('directors')
+                  <div class="text-danger small mt-1">{{ $message }}</div>
               @enderror
             </div>
+            
             <div class="col-md-6">
-              <label class="form-label">Продюсер <span class="text-danger">*</span></label>
-              <input type="text" name="producer" class="form-control @error('producer') is-invalid @enderror" value="{{ old('producer') }}" required>
-              @error('producer')
-                  <div class="invalid-feedback">{{ $message }}</div>
+              <label class="form-label">Продюсеры <span class="text-danger">*</span></label>
+              <div class="producers-checkbox-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--input-bg);">
+                @foreach($allProducers as $producer)
+                    <label class="form-check mb-2 producer-item" for="producer_{{ $producer->id_producer }}" style="display: block; cursor: pointer; padding: 8px; margin: 0 -8px; border-radius: 4px;">
+                        <input class="form-check-input producer-checkbox" type="checkbox" name="producers[]" value="{{ $producer->id_producer }}" id="producer_{{ $producer->id_producer }}"
+                            @if(collect(old('producers', []))->contains($producer->id_producer)) checked @endif>
+                        <span class="form-check-label">
+                            {{ $producer->name }}
+                        </span>
+                    </label>
+                @endforeach
+              </div>
+              <small class="text-muted d-block mt-1">Выберите одного или нескольких продюсеров</small>
+              <label class="form-label mt-2">Новые продюсеры (через запятую)</label>
+              <input type="text" name="new_producers" class="form-control" value="{{ old('new_producers') }}">
+              @error('producers')
+                  <div class="text-danger small mt-1">{{ $message }}</div>
               @enderror
             </div>
+            
             <div class="col-md-4">
               <label class="form-label">Длительность <span class="text-danger">*</span></label>
               <input type="text" name="duration" id="duration-input" class="form-control @error('duration') is-invalid @enderror" placeholder="1 ч. 50 мин." value="{{ old('duration') }}" required>
@@ -372,24 +439,69 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ищем все checkbox'ы жанров внутри этой формы
         const allGenreCheckboxes = form.querySelectorAll('input[type="checkbox"][name="genres[]"]');
         
-        if (allGenreCheckboxes.length === 0) return; // Если нет checkbox'ов, пропускаем
-        
-        let checkedCount = 0;
-        
-        // Подсчитываем выбранные checkbox'ы
-        allGenreCheckboxes.forEach(function(checkbox) {
-            // Проверяем свойство checked напрямую
-            if (checkbox.checked === true) {
-                checkedCount++;
+        if (allGenreCheckboxes.length > 0) {
+            let checkedCount = 0;
+            
+            // Подсчитываем выбранные checkbox'ы
+            allGenreCheckboxes.forEach(function(checkbox) {
+                if (checkbox.checked === true) {
+                    checkedCount++;
+                }
+            });
+            
+            // Проверяем, что есть хотя бы один выбранный checkbox
+            if (checkedCount === 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('Пожалуйста, выберите хотя бы один жанр');
+                return false;
             }
-        });
+        }
         
-        // Проверяем, что есть хотя бы один выбранный checkbox
-        if (checkedCount === 0) {
-            e.preventDefault();
-            e.stopPropagation();
-            alert('Пожалуйста, выберите хотя бы один жанр');
-            return false;
+        // Валидация режиссёров
+        const allDirectorCheckboxes = form.querySelectorAll('input[type="checkbox"][name="directors[]"]');
+        const newDirectorsInput = form.querySelector('input[name="new_directors"]');
+        
+        if (allDirectorCheckboxes.length > 0) {
+            let checkedDirectorsCount = 0;
+            
+            allDirectorCheckboxes.forEach(function(checkbox) {
+                if (checkbox.checked === true) {
+                    checkedDirectorsCount++;
+                }
+            });
+            
+            const hasNewDirectors = newDirectorsInput && newDirectorsInput.value.trim().length > 0;
+            
+            if (checkedDirectorsCount === 0 && !hasNewDirectors) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('Пожалуйста, выберите хотя бы одного режиссёра или укажите нового');
+                return false;
+            }
+        }
+        
+        // Валидация продюсеров
+        const allProducerCheckboxes = form.querySelectorAll('input[type="checkbox"][name="producers[]"]');
+        const newProducersInput = form.querySelector('input[name="new_producers"]');
+        
+        if (allProducerCheckboxes.length > 0) {
+            let checkedProducersCount = 0;
+            
+            allProducerCheckboxes.forEach(function(checkbox) {
+                if (checkbox.checked === true) {
+                    checkedProducersCount++;
+                }
+            });
+            
+            const hasNewProducers = newProducersInput && newProducersInput.value.trim().length > 0;
+            
+            if (checkedProducersCount === 0 && !hasNewProducers) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('Пожалуйста, выберите хотя бы одного продюсера или укажите нового');
+                return false;
+            }
         }
     }, false);
     
@@ -518,10 +630,96 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('shown.bs.modal', function(e) {
         applyMaskToExistingFields();
     });
+    
+    // Логика для красного индикатора слева у режиссёров и продюсеров (как у жанров)
+    function updateCheckboxIndicator(checkbox) {
+        const label = checkbox.closest('.director-item, .producer-item');
+        if (label) {
+            if (checkbox.checked) {
+                label.style.setProperty('border-left', '3px solid var(--accent-primary)', 'important');
+                label.style.setProperty('padding-left', '13px', 'important');
+            } else {
+                label.style.setProperty('border-left', '3px solid transparent', 'important');
+                label.style.setProperty('padding-left', '8px', 'important');
+            }
+        }
+    }
+    
+    // Обработчик для всех чекбоксов режиссёров и продюсеров
+    document.addEventListener('change', function(e) {
+        if (e.target && (e.target.classList.contains('director-checkbox') || e.target.classList.contains('producer-checkbox'))) {
+            updateCheckboxIndicator(e.target);
+        }
+    });
+    
+    // Инициализация: применяем стили для всех чекбоксов
+    function initializeCheckboxIndicators() {
+        const allCheckboxes = document.querySelectorAll('.director-checkbox, .producer-checkbox');
+        allCheckboxes.forEach(function(checkbox) {
+            updateCheckboxIndicator(checkbox);
+        });
+    }
+    
+    // Применяем при загрузке страницы
+    initializeCheckboxIndicators();
+    
+    // Применяем при открытии модальных окон
+    document.addEventListener('shown.bs.modal', function(e) {
+        setTimeout(function() {
+            initializeCheckboxIndicators();
+        }, 100);
+    });
 });
 </script>
 
 <style>
+    /* Стили для контейнеров с чекбоксами режиссёров и продюсеров (скопировано из жанров) */
+    .directors-checkbox-container,
+    .producers-checkbox-container {
+        background: var(--input-bg) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    .directors-checkbox-container .form-check,
+    .directors-checkbox-container .director-item,
+    .producers-checkbox-container .form-check,
+    .producers-checkbox-container .producer-item {
+        padding: 8px;
+        margin: 0 -8px;
+        position: relative;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .directors-checkbox-container .form-check:hover,
+    .directors-checkbox-container .director-item:hover,
+    .producers-checkbox-container .form-check:hover,
+    .producers-checkbox-container .producer-item:hover {
+        background: var(--bg-tertiary);
+    }
+    
+    .directors-checkbox-container .form-check-input,
+    .producers-checkbox-container .form-check-input {
+        position: absolute;
+        left: -9999px;
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .directors-checkbox-container .director-item,
+    .producers-checkbox-container .producer-item {
+        border-left: 3px solid transparent;
+        padding-left: 8px;
+        transition: border-left 0.2s ease, padding-left 0.2s ease;
+    }
+    
+    .directors-checkbox-container .form-check-label,
+    .producers-checkbox-container .form-check-label {
+        position: relative;
+        z-index: 1;
+        margin-left: 0;
+    }
+    
     /* Стили для темной темы в модалках фильмов */
     [data-theme="dark"] #addMovieModal .btn-close,
     [data-theme="dark"] .modal[id^="editMovieModal"] .btn-close {
@@ -571,6 +769,7 @@ document.addEventListener('DOMContentLoaded', function() {
         border-color: var(--input-focus-border) !important;
         color: var(--text-primary) !important;
     }
+    
 </style>
 
 @endsection

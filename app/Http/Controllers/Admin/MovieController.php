@@ -9,6 +9,8 @@ use App\Models\Genre;
 use App\Models\Session;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\Director;
+use App\Models\Producer;
 use Illuminate\Support\Facades\DB;
 
 class MovieController extends Controller
@@ -46,7 +48,11 @@ class MovieController extends Controller
             ->orderBy('genre_name')
             ->get();
 
-        return view('admin.movies', compact('movies', 'genres'));
+        // Справочники режиссёров и продюсеров
+        $allDirectors = Director::orderBy('name')->get();
+        $allProducers = Producer::orderBy('name')->get();
+
+        return view('admin.movies', compact('movies', 'genres', 'allDirectors', 'allProducers'));
     }
 
     /**
@@ -91,8 +97,12 @@ class MovieController extends Controller
             'release_year' => 'required|integer|min:1900|max:' . date('Y'),
             'age_limit' => 'required|string|max:10',
             'description' => 'nullable|string',
-            'director' => 'required|string|max:255',
-            'producer' => 'required|string|max:255',
+            'directors' => 'array',
+            'directors.*' => 'integer|exists:directors,id_director',
+            'new_directors' => 'nullable|string|max:500',
+            'producers' => 'array',
+            'producers.*' => 'integer|exists:producers,id_producer',
+            'new_producers' => 'nullable|string|max:500',
             'poster' => 'required|image|max:2048',
             'baner' => 'nullable|image|max:2048',
             'genres' => 'required|array|min:1',
@@ -152,13 +162,27 @@ class MovieController extends Controller
             $description = preg_replace('/[ \t]+/', ' ', $description);
         }
 
+        // Проверяем, что указан хотя бы один режиссёр и продюсер
+        $hasDirectors = !empty($validated['directors'] ?? []) || !empty(trim($validated['new_directors'] ?? ''));
+        $hasProducers = !empty($validated['producers'] ?? []) || !empty(trim($validated['new_producers'] ?? ''));
+
+        if (!$hasDirectors) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['directors' => 'Укажите хотя бы одного режиссёра.']);
+        }
+
+        if (!$hasProducers) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['producers' => 'Укажите хотя бы одного продюсера.']);
+        }
+
         // Проверка на полностью одинаковый фильм
         $existingMovie = Movie::where('movie_title', $validated['movie_title'])
             ->where('duration', $validated['duration'])
             ->where('release_year', $validated['release_year'])
             ->where('age_limit', $validated['age_limit'])
-            ->where('director', $validated['director'])
-            ->where('producer', $validated['producer'])
             ->where('description', $description)
             ->first();
 
@@ -175,14 +199,15 @@ class MovieController extends Controller
             'release_year' => $validated['release_year'] ?? null,
             'age_limit' => $validated['age_limit'],
             'description' => $description,
-            'director' => $validated['director'] ?? null,
-            'producer' => $validated['producer'],
             'poster' => $posterPath,
             'baner' => $banerPath,
         ]);
 
         // Привязка жанров (обязательно)
         $movie->genres()->sync($validated['genres']);
+
+        // Привязка режиссёров и продюсеров
+        $this->syncPeople($movie, $validated['directors'] ?? [], $validated['new_directors'] ?? '', $validated['producers'] ?? [], $validated['new_producers'] ?? '');
 
         return redirect()->route('admin.movies.index')->with('success', 'Фильм добавлен.');
     }
@@ -210,8 +235,12 @@ class MovieController extends Controller
             'release_year' => 'required|integer|min:1900|max:' . date('Y'),
             'age_limit' => 'required|string|max:10',
             'description' => 'nullable|string',
-            'director' => 'required|string|max:255',
-            'producer' => 'required|string|max:255',
+            'directors' => 'array',
+            'directors.*' => 'integer|exists:directors,id_director',
+            'new_directors' => 'nullable|string|max:500',
+            'producers' => 'array',
+            'producers.*' => 'integer|exists:producers,id_producer',
+            'new_producers' => 'nullable|string|max:500',
             'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'baner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'genres' => 'required|array|min:1',
@@ -250,8 +279,6 @@ class MovieController extends Controller
             ->where('duration', $validated['duration'])
             ->where('release_year', $validated['release_year'])
             ->where('age_limit', $validated['age_limit'])
-            ->where('director', $validated['director'])
-            ->where('producer', $validated['producer'])
             ->where('description', $description)
             ->where('id_movie', '!=', $id)
             ->first();
@@ -262,6 +289,22 @@ class MovieController extends Controller
                 ->withInput();
         }
 
+        // Проверяем, что указан хотя бы один режиссёр и продюсер
+        $hasDirectors = !empty($validated['directors'] ?? []) || !empty(trim($validated['new_directors'] ?? ''));
+        $hasProducers = !empty($validated['producers'] ?? []) || !empty(trim($validated['new_producers'] ?? ''));
+
+        if (!$hasDirectors) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['directors' => 'Укажите хотя бы одного режиссёра.']);
+        }
+
+        if (!$hasProducers) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['producers' => 'Укажите хотя бы одного продюсера.']);
+        }
+
         // Обновление данных фильма
         $movie->update([
             'movie_title' => $validated['movie_title'],
@@ -269,12 +312,13 @@ class MovieController extends Controller
             'release_year' => $validated['release_year'] ?? null,
             'age_limit' => $validated['age_limit'],
             'description' => $description,
-            'director' => $validated['director'] ?? null,
-            'producer' => $validated['producer'],
         ]);
 
         // Синхронизация жанров (обязательно)
         $movie->genres()->sync($validated['genres']);
+
+        // Синхронизация режиссёров и продюсеров
+        $this->syncPeople($movie, $validated['directors'] ?? [], $validated['new_directors'] ?? '', $validated['producers'] ?? [], $validated['new_producers'] ?? '');
 
         return redirect()->route('admin.movies.index')->with('success', 'Фильм обновлён.');
     }
@@ -325,5 +369,47 @@ class MovieController extends Controller
         }
 
         return redirect()->route('admin.movies.index')->with('success', $message);
+    }
+
+    /**
+     * Привязка режиссёров и продюсеров к фильму (many-to-many)
+     */
+    protected function syncPeople(Movie $movie, array $directorIds, string $newDirectors, array $producerIds, string $newProducers): void
+    {
+        // Режиссёры
+        $directorIds = collect($directorIds)->filter()->map(fn ($id) => (int) $id)->values();
+
+        $newDirectorNames = $this->splitNames($newDirectors);
+        foreach ($newDirectorNames as $name) {
+            $dir = Director::firstOrCreate(['name' => $name]);
+            $directorIds->push($dir->id_director);
+        }
+
+        $movie->directors()->sync($directorIds->unique()->values());
+
+        // Продюсеры
+        $producerIds = collect($producerIds)->filter()->map(fn ($id) => (int) $id)->values();
+
+        $newProducerNames = $this->splitNames($newProducers);
+        foreach ($newProducerNames as $name) {
+            $prod = Producer::firstOrCreate(['name' => $name]);
+            $producerIds->push($prod->id_producer);
+        }
+
+        $movie->producers()->sync($producerIds->unique()->values());
+    }
+
+    protected function splitNames(?string $raw): array
+    {
+        if (!$raw) {
+            return [];
+        }
+        $parts = preg_split('/[;,]+/', $raw);
+        return collect($parts)
+            ->map(fn ($v) => trim($v))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

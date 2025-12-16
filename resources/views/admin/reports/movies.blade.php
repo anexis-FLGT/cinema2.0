@@ -50,9 +50,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($popularMovies as $index => $movie)
+                                @forelse($popularMovies as $movie)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ ($popularMovies->currentPage() - 1) * $popularMovies->perPage() + $loop->iteration }}</td>
                                         <td>{{ $movie->movie_title }}</td>
                                         <td class="text-end">{{ $movie->tickets_count }}</td>
                                     </tr>
@@ -64,6 +64,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($popularMovies->hasPages())
+                        <div class="card-footer">
+                            {{ $popularMovies->appends(request()->except('popular_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -86,9 +91,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($profitableMovies as $index => $movie)
+                                @forelse($profitableMovies as $movie)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ ($profitableMovies->currentPage() - 1) * $profitableMovies->perPage() + $loop->iteration }}</td>
                                         <td>{{ $movie->movie_title }}</td>
                                         <td class="text-end">{{ number_format($movie->revenue, 2, ',', ' ') }} ₽</td>
                                         <td class="text-end">{{ $movie->tickets_count }}</td>
@@ -101,6 +106,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($profitableMovies->hasPages())
+                        <div class="card-footer">
+                            {{ $profitableMovies->appends(request()->except('profitable_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -137,6 +147,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($movieOccupancy->hasPages())
+                <div class="card-footer">
+                    {{ $movieOccupancy->appends(request()->except('occupancy_page'))->links('pagination::bootstrap-4') }}
+                </div>
+            @endif
         </div>
     </div>
     @endif

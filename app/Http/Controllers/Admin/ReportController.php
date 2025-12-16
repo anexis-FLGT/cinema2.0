@@ -13,6 +13,8 @@ use App\Models\Hall;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class ReportController extends Controller
 {
@@ -73,7 +75,7 @@ class ReportController extends Controller
             ->select('movies.id_movie', 'movies.movie_title', DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(payments.id_payment) as bookings_count'))
             ->groupBy('movies.id_movie', 'movies.movie_title')
             ->orderByDesc('revenue')
-            ->get();
+            ->paginate(10, ['*'], 'movies_page');
 
         // Выручка по залам
         $revenueByHall = Payment::where('payment_status', 'оплачено')
@@ -84,7 +86,7 @@ class ReportController extends Controller
             ->select('halls.id_hall', 'halls.hall_name', DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(payments.id_payment) as bookings_count'))
             ->groupBy('halls.id_hall', 'halls.hall_name')
             ->orderByDesc('revenue')
-            ->get();
+            ->paginate(10, ['*'], 'halls_page');
 
         // Динамика выручки по дням
         $dailyRevenue = Payment::where('payment_status', 'оплачено')
@@ -92,7 +94,7 @@ class ReportController extends Controller
             ->selectRaw('DATE(created_at) as date, SUM(amount) as revenue')
             ->groupBy('date')
             ->orderBy('date')
-            ->get();
+            ->paginate(15, ['*'], 'daily_page');
 
         $dateFrom = $request->input('date_from', $startDate->format('Y-m-d'));
         $dateTo = $request->input('date_to', $endDate->format('Y-m-d'));
@@ -141,7 +143,7 @@ class ReportController extends Controller
             ->count();
 
         // Заполняемость залов
-        $hallOccupancy = Session::whereBetween('date_time_session', [$startDate, $endDate])
+        $hallOccupancyCollection = Session::whereBetween('date_time_session', [$startDate, $endDate])
             ->with(['hall', 'bookings' => function($query) {
                 $query->whereHas('payment', function($q) {
                     $q->where('payment_status', 'оплачено');
@@ -164,7 +166,22 @@ class ReportController extends Controller
                 ];
             })
             ->sortByDesc('occupancy')
-            ->take(20);
+            ->values();
+        
+        // Пагинация для заполняемости залов
+        $currentPage = Paginator::resolveCurrentPage('hall_page');
+        $perPage = 10;
+        $currentItems = $hallOccupancyCollection->slice(($currentPage - 1) * $perPage, $perPage)->all();
+        $hallOccupancy = new LengthAwarePaginator(
+            $currentItems,
+            $hallOccupancyCollection->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'hall_page',
+            ]
+        );
 
         // Самые популярные сеансы
         $popularSessions = Payment::where('payment_status', 'оплачено')
@@ -175,8 +192,7 @@ class ReportController extends Controller
             ->select('cinema_sessions.id_session', 'movies.movie_title', 'cinema_sessions.date_time_session', DB::raw('COUNT(payments.id_payment) as tickets_count'))
             ->groupBy('cinema_sessions.id_session', 'movies.movie_title', 'cinema_sessions.date_time_session')
             ->orderByDesc('tickets_count')
-            ->take(20)
-            ->get();
+            ->paginate(10, ['*'], 'sessions_page');
 
         $dateFrom = $request->input('date_from', $startDate->format('Y-m-d'));
         $dateTo = $request->input('date_to', $endDate->format('Y-m-d'));
@@ -228,8 +244,7 @@ class ReportController extends Controller
             ->select('movies.id_movie', 'movies.movie_title', DB::raw('COUNT(payments.id_payment) as tickets_count'))
             ->groupBy('movies.id_movie', 'movies.movie_title')
             ->orderByDesc('tickets_count')
-            ->take(20)
-            ->get();
+            ->paginate(10, ['*'], 'popular_page');
 
         // Самые прибыльные фильмы
         $profitableMovies = Payment::where('payment_status', 'оплачено')
@@ -240,11 +255,10 @@ class ReportController extends Controller
             ->select('movies.id_movie', 'movies.movie_title', DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(payments.id_payment) as tickets_count'))
             ->groupBy('movies.id_movie', 'movies.movie_title')
             ->orderByDesc('revenue')
-            ->take(20)
-            ->get();
+            ->paginate(10, ['*'], 'profitable_page');
 
         // Средняя заполняемость по фильмам
-        $movieOccupancy = Session::whereBetween('date_time_session', [$startDate, $endDate])
+        $movieOccupancyCollection = Session::whereBetween('date_time_session', [$startDate, $endDate])
             ->with(['movie', 'hall', 'bookings' => function($query) {
                 $query->whereHas('payment', function($q) {
                     $q->where('payment_status', 'оплачено');
@@ -275,7 +289,22 @@ class ReportController extends Controller
                 ];
             })
             ->sortByDesc('avg_occupancy')
-            ->take(20);
+            ->values();
+        
+        // Пагинация для средней заполняемости по фильмам
+        $currentPage = Paginator::resolveCurrentPage('occupancy_page');
+        $perPage = 10;
+        $currentItems = $movieOccupancyCollection->slice(($currentPage - 1) * $perPage, $perPage)->all();
+        $movieOccupancy = new LengthAwarePaginator(
+            $currentItems,
+            $movieOccupancyCollection->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'occupancy_page',
+            ]
+        );
 
         $dateFrom = $request->input('date_from', $startDate->format('Y-m-d'));
         $dateTo = $request->input('date_to', $endDate->format('Y-m-d'));

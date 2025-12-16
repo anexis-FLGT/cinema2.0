@@ -18,8 +18,6 @@ class Movie extends Model
         'release_year',
         'age_limit',
         'description',
-        'director',
-        'producer',
     ];
 
     public function genres()
@@ -30,6 +28,16 @@ class Movie extends Model
     public function sessions()
     {
         return $this->hasMany(Session::class, 'movie_id', 'id_movie');
+    }
+
+    public function directors()
+    {
+        return $this->belongsToMany(Director::class, 'director_movie', 'movie_id', 'director_id');
+    }
+
+    public function producers()
+    {
+        return $this->belongsToMany(Producer::class, 'movie_producer', 'movie_id', 'producer_id');
     }
 
     public function bookings()

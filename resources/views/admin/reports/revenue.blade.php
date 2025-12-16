@@ -73,6 +73,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($revenueByMovie->hasPages())
+                        <div class="card-footer">
+                            {{ $revenueByMovie->appends(request()->except('movies_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -108,6 +113,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($revenueByHall->hasPages())
+                        <div class="card-footer">
+                            {{ $revenueByHall->appends(request()->except('halls_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -138,6 +148,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($dailyRevenue->hasPages())
+                <div class="card-footer">
+                    {{ $dailyRevenue->appends(request()->except('daily_page'))->links('pagination::bootstrap-4') }}
+                </div>
+            @endif
         </div>
     </div>
     @endif

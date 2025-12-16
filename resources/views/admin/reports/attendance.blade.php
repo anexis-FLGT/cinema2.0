@@ -85,6 +85,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($hallOccupancy->hasPages())
+                        <div class="card-footer">
+                            {{ $hallOccupancy->appends(request()->except('hall_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -120,6 +125,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($popularSessions->hasPages())
+                        <div class="card-footer">
+                            {{ $popularSessions->appends(request()->except('sessions_page'))->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
